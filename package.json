@@ -1,17 +1,27 @@
 {
-  "name": "csc118-lecture-1-what-is-linux",
+  "name": "csc118-2026fa",
+  "description": "CSC 118 — Introduction to Linux: lecture decks, notes, and labs",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "slidev lecture-01-what-is-linux.md --open",
-    "build": "slidev build lecture-01-what-is-linux.md",
-    "export": "slidev export lecture-01-what-is-linux.md"
+    "dev": "node scripts/course.mjs dev",
+    "build": "node scripts/course.mjs build",
+    "export": "node scripts/course.mjs export",
+    "notes": "node scripts/course.mjs notes",
+    "new": "node scripts/course.mjs new",
+    "list": "node scripts/course.mjs list",
+    "test": "node --test \"test/unit/**/*.test.mjs\"",
+    "test:e2e": "node --test \"test/e2e/**/*.test.mjs\""
   },
   "dependencies": {
     "@slidev/cli": "^52.19.0",
     "@slidev/theme-seriph": "^0.25.0"
   },
   "devDependencies": {
+    "@shikijs/markdown-it": "^4.4.3",
+    "gray-matter": "^4.0.3",
+    "markdown-it": "^14.3.0",
+    "markdown-it-anchor": "^9.2.1",
     "playwright-chromium": "^1.62.1"
   }
 }

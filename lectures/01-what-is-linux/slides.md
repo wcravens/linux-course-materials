@@ -1,5 +1,9 @@
 ---
 theme: seriph
+addons:
+  # `@/` resolves against this deck's own directory; a bare `../` would be
+  # resolved one level higher still. See README, "Shared deck assets".
+  - '@/../../shared/slidev-addon-csc118'
 title: What is Linux?
 info: |
   ## CSC 118 — Lecture 1
@@ -133,13 +137,6 @@ Sources: [StatCounter](https://en.wikipedia.org/wiki/Usage_share_of_operating_sy
 
 </div>
 
-<style>
-table { font-size: 0.95rem; }
-table th, table td { padding: 0.42rem 0.6rem; }
-.notes { font-size: 0.68rem; line-height: 1.45; opacity: 0.72; margin-top: 1.2rem; }
-.notes p { margin: 0.3rem 0; }
-</style>
-
 ---
 
 # Linux by Segment
@@ -170,30 +167,6 @@ table th, table td { padding: 0.42rem 0.6rem; }
 <p class="cap">"Linux-based" counts Android and ChromeOS. The desktop is the one place Linux lost — and the only place most people look.</p>
 
 </div>
-
-<style>
-.viz {
-  --bar:      #2a78d6;
-  --ink:      #0b0b0b;
-  --ink-2:    #52514e;
-  --muted:    #898781;
-  --baseline: #c3c2b7;
-}
-html.dark .viz {
-  --bar:      #3987e5;
-  --ink:      #ffffff;
-  --ink-2:    #c3c2b7;
-  --muted:    #898781;
-  --baseline: #383835;
-}
-.viz svg { width: 100%; height: auto; }
-.viz text { font-family: inherit; }
-.viz .bar  { fill: var(--bar); }
-.viz .cat  { fill: var(--ink-2); font-size: 16px; }
-.viz .val  { fill: var(--ink);   font-size: 16px; font-weight: 600; }
-.viz .base { stroke: var(--baseline); stroke-width: 1; }
-.viz .cap  { font-size: 0.72rem; color: var(--muted); margin-top: 0.5rem; }
-</style>
 
 ---
 layout: section
