@@ -3,4 +3,4 @@ dist/
 .slidev/
 *.local
 *.swp
-slides-export.pdf
+lecture-01-what-is-linux-export.pdf

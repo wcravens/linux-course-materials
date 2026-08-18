@@ -1,8 +1,7 @@
 # CSC 118 — Lecture 1: What is Linux?
 
 A [Slidev](https://sli.dev) presentation deck. The slides live in a single file,
-[`slides.md`](./slides.md); [`lecture-1_what-is-linux.md`](./lecture-1_what-is-linux.md)
-is the original prose the deck was built from.
+[`lecture-01-what-is-linux.md`](./lecture-01-what-is-linux.md).
 
 ## Requirements
 
@@ -21,7 +20,7 @@ npm run dev
 ```
 
 Starts the dev server and opens <http://localhost:3030>. The deck hot-reloads as you
-edit `slides.md`, so you can fix a typo mid-review without restarting.
+edit `lecture-01-what-is-linux.md`, so you can fix a typo mid-review without restarting.
 
 Useful keys while presenting:
 
@@ -51,7 +50,7 @@ or opened locally; no Node runtime is required to view it.
 npm run export
 ```
 
-Writes `slides-export.pdf` (23 pages, one per slide).
+Writes `lecture-01-what-is-linux-export.pdf` (23 pages, one per slide).
 
 Export renders the deck in a headless browser, which is why `playwright-chromium`
 is a dev dependency. Recent npm versions block package install scripts by default,

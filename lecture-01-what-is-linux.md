@@ -14,7 +14,9 @@ drawings:
 
 # What is Linux?
 
-CSC 118 · Lecture 1
+CSC 118 · Introduction to Linux
+
+Lecture 1
 
 <div class="abs-br m-6 text-sm opacity-60">
 Press <kbd>space</kbd> to advance
@@ -109,13 +111,89 @@ Source: [The Linux History Archive](https://www.cs.cmu.edu/~awb/linux.history.ht
 
 # Market Share of Operating Systems
 
-[Usage share of operating systems (Wikipedia)](https://en.wikipedia.org/wiki/Usage_share_of_operating_systems)
+| Segment | Linux-based | Windows | Apple | Other |
+| --- | ---: | ---: | ---: | ---: |
+| Desktop & laptop | 5.1% <sup>a</sup> | 66.5% | 12.5% | 16.0% <sup>b</sup> |
+| Smartphones | 72% <sup>c</sup> | — | 24% | 3% <sup>d</sup> |
+| Tablets | 48.9% <sup>c</sup> | <0.1% | 51.0% | 0.2% |
+| Public/Web servers | 92% <sup>e</sup> | 8.2% | — | — |
+| Supercomputers | 100% | 0% | 0% | 0% |
 
-- [Desktop and laptop computers](https://en.wikipedia.org/wiki/Usage_share_of_operating_systems#Desktop_and_laptop_computers)
-- [Smartphone OS by usage](https://en.wikipedia.org/wiki/Usage_share_of_operating_systems#Smartphones_OS_by_usage)
-- [Tablet computer OS by usage](https://en.wikipedia.org/wiki/Usage_share_of_operating_systems#Tablet_computers_OS_by_usage)
-- [Public servers on the Internet](https://en.wikipedia.org/wiki/Usage_share_of_operating_systems#Public_servers_on_the_Internet)
-- [HPC / supercomputers](https://en.wikipedia.org/wiki/Usage_share_of_operating_systems#Supercomputers)
+<div class="notes">
+
+<sup>a</sup> Linux 3.9% + ChromeOS 1.2% &nbsp;&nbsp;·&nbsp;&nbsp; <sup>c</sup> Android
+
+<sup>b</sup> StatCounter reports 16.0% "Unknown" — larger than the entire Mac share
+
+<sup>d</sup> HarmonyOS NEXT, which replaced the Linux kernel with Huawei's own
+
+<sup>e</sup> "Unix-like"; W3Techs percentages overlap, so this row does not total 100%
+
+Sources: [StatCounter](https://en.wikipedia.org/wiki/Usage_share_of_operating_systems) desktop Dec 2025 & tablet Oct 2025 · Counterpoint Q4 2025 · [W3Techs](https://w3techs.com/technologies/overview/operating_system) Aug 2026 · [TOP500](https://www.top500.org/lists/top500/2026/06/) June 2026
+
+</div>
+
+<style>
+table { font-size: 0.95rem; }
+table th, table td { padding: 0.42rem 0.6rem; }
+.notes { font-size: 0.68rem; line-height: 1.45; opacity: 0.72; margin-top: 1.2rem; }
+.notes p { margin: 0.3rem 0; }
+</style>
+
+---
+
+# Linux by Segment
+
+<div class="viz">
+<svg viewBox="0 0 800 296" role="img" aria-label="Linux-based share of operating system usage by market segment: desktop and laptop 5.1 percent, tablets 48.9 percent, smartphones 72 percent, web servers 92 percent, supercomputers 100 percent.">
+  <line class="base" x1="190" y1="14" x2="190" y2="282" />
+
+  <text class="cat" x="178" y="32"  text-anchor="end" dominant-baseline="middle">Desktop &amp; laptop</text>
+  <text class="cat" x="178" y="90"  text-anchor="end" dominant-baseline="middle">Tablets</text>
+  <text class="cat" x="178" y="148" text-anchor="end" dominant-baseline="middle">Smartphones</text>
+  <text class="cat" x="178" y="206" text-anchor="end" dominant-baseline="middle">Web servers</text>
+  <text class="cat" x="178" y="264" text-anchor="end" dominant-baseline="middle">Supercomputers</text>
+
+  <path class="bar" d="M190 20  H212.01 A4 4 0 0 1 216.01 24  V40  A4 4 0 0 1 212.01 44  H190 Z" />
+  <path class="bar" d="M190 78  H435.39 A4 4 0 0 1 439.39 82  V98  A4 4 0 0 1 435.39 102 H190 Z" />
+  <path class="bar" d="M190 136 H553.20 A4 4 0 0 1 557.20 140 V156 A4 4 0 0 1 553.20 160 H190 Z" />
+  <path class="bar" d="M190 194 H655.20 A4 4 0 0 1 659.20 198 V214 A4 4 0 0 1 655.20 218 H190 Z" />
+  <path class="bar" d="M190 252 H696.00 A4 4 0 0 1 700.00 256 V272 A4 4 0 0 1 696.00 276 H190 Z" />
+
+  <text class="val" x="226.0" y="32"  dominant-baseline="middle">5.1%</text>
+  <text class="val" x="449.4" y="90"  dominant-baseline="middle">48.9%</text>
+  <text class="val" x="567.2" y="148" dominant-baseline="middle">72%</text>
+  <text class="val" x="669.2" y="206" dominant-baseline="middle">92%</text>
+  <text class="val" x="710.0" y="264" dominant-baseline="middle">100%</text>
+</svg>
+
+<p class="cap">"Linux-based" counts Android and ChromeOS. The desktop is the one place Linux lost — and the only place most people look.</p>
+
+</div>
+
+<style>
+.viz {
+  --bar:      #2a78d6;
+  --ink:      #0b0b0b;
+  --ink-2:    #52514e;
+  --muted:    #898781;
+  --baseline: #c3c2b7;
+}
+html.dark .viz {
+  --bar:      #3987e5;
+  --ink:      #ffffff;
+  --ink-2:    #c3c2b7;
+  --muted:    #898781;
+  --baseline: #383835;
+}
+.viz svg { width: 100%; height: auto; }
+.viz text { font-family: inherit; }
+.viz .bar  { fill: var(--bar); }
+.viz .cat  { fill: var(--ink-2); font-size: 16px; }
+.viz .val  { fill: var(--ink);   font-size: 16px; font-weight: 600; }
+.viz .base { stroke: var(--baseline); stroke-width: 1; }
+.viz .cap  { font-size: 0.72rem; color: var(--muted); margin-top: 0.5rem; }
+</style>
 
 ---
 layout: section

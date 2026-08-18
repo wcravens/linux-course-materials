@@ -3,9 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "slidev --open",
-    "build": "slidev build",
-    "export": "slidev export"
+    "dev": "slidev lecture-01-what-is-linux.md --open",
+    "build": "slidev build lecture-01-what-is-linux.md",
+    "export": "slidev export lecture-01-what-is-linux.md"
   },
   "dependencies": {
     "@slidev/cli": "^52.19.0",
