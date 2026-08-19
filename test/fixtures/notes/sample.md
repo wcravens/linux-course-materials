@@ -12,7 +12,7 @@ A paragraph with a [link](https://example.com).
 ![Missing](/nope.png)
 
 ```sh
-echo "hello"
+echo "hello"   # the theme's lowest-contrast token
 ```
 
 | Column | Count |

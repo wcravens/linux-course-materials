@@ -124,8 +124,18 @@ self-contained.
 
 markdown-it runs with `html: true`, `linkify`, and `typographer` (so `--` becomes
 an en dash and quotes become curly — avoid literal `--` in prose). Code is
-highlighted with Shiki using the same themes Slidev uses, so code looks identical
-in both.
+highlighted with Shiki using the same themes Slidev uses, so code looks nearly
+identical in both.
+
+Nearly, because prose is held to WCAG AA (4.5:1) and vitesse-light was designed
+for a screen-lit editor: its comment gray is 2.3:1 on paper. A Shiki transformer
+in `notes.mjs` darkens *only* the light-theme colors that fail, in the rendered
+output, keeping the hue — the slides are unaffected. The same transformer
+rewrites the theme background Shiki writes inline on the `<pre>`, which would
+otherwise outrank `--code-bg` from the stylesheet; that variable is parsed out of
+`notes.css` so the two cannot drift. Accessibility is a real constraint on this
+output, not a nicety: table headers carry `scope`, and colors are checked against
+the background they actually land on.
 
 Playwright is already required by `slidev export`, so the prose pipeline adds
 only `markdown-it`, `markdown-it-anchor`, `@shikijs/markdown-it`, and

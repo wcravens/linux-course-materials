@@ -25,6 +25,120 @@ const MIME_TYPES = {
   '.svg': 'image/svg+xml'
 }
 
+// WCAG AA for body-size text is 4.5:1; code is set at 0.82rem, so the
+// large-text allowance of 3:1 does not apply. The extra tenth is headroom, so
+// a checker that rounds differently than we do still agrees.
+const CONTRAST_TARGET = 4.6
+const FALLBACK_CODE_BG = '#ffffff'
+
+/**
+ * Split `#rgb`, `#rrggbb`, or `#rrggbbaa` into channels plus alpha.
+ * Returns null for anything else, so callers can leave it untouched.
+ */
+function parseColor (value) {
+  const hex = /^#([0-9a-f]{3,8})$/i.exec(String(value).trim())?.[1]
+  if (!hex) return null
+
+  const expand = hex.length <= 4 ? (c) => c + c : (c) => c
+  const pairs = hex.length <= 4 ? hex.split('') : hex.match(/../g)
+  if (pairs.length < 3 || pairs.length > 4) return null
+
+  const [r, g, b, a] = pairs.map((c) => parseInt(expand(c), 16))
+  return { rgb: [r, g, b], alpha: a === undefined ? 1 : a / 255, hasAlpha: a !== undefined }
+}
+
+function formatColor ({ rgb, alpha, hasAlpha }) {
+  const byte = (value) => Math.round(Math.min(255, Math.max(0, value))).toString(16).padStart(2, '0')
+  return '#' + rgb.map(byte).join('') + (hasAlpha ? byte(alpha * 255) : '')
+}
+
+function relativeLuminance ([r, g, b]) {
+  const channel = (value) => {
+    const v = value / 255
+    return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4
+  }
+  return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
+}
+
+/**
+ * WCAG contrast between a foreground and an opaque background. A translucent
+ * foreground is composited onto the background first, which is what the
+ * browser draws and what an accessibility checker measures.
+ */
+export function contrastRatio (foreground, background) {
+  const fg = parseColor(foreground)
+  const bg = parseColor(background)
+  if (!fg || !bg) return null
+
+  const composited = fg.rgb.map((value, i) => value * fg.alpha + bg.rgb[i] * (1 - fg.alpha))
+  const [light, dark] = [relativeLuminance(composited), relativeLuminance(bg.rgb)]
+    .sort((a, b) => b - a)
+  return (light + 0.05) / (dark + 0.05)
+}
+
+/**
+ * Darken `foreground` until it clears `target` against `background`, keeping
+ * the hue by scaling all three channels together. Translucent colors are tried
+ * at their own alpha first and only made opaque if that cannot reach the
+ * target — a 47%-opaque color tops out around 2.9:1 on a light background.
+ * Returns the color unchanged when it already passes.
+ */
+export function readableColor (foreground, background, target = CONTRAST_TARGET) {
+  const fg = parseColor(foreground)
+  if (!fg || !parseColor(background)) return foreground
+  if (contrastRatio(foreground, background) >= target) return foreground
+
+  for (const hasAlpha of fg.hasAlpha ? [true, false] : [false]) {
+    for (let scale = 100; scale >= 0; scale -= 1) {
+      const candidate = formatColor({
+        rgb: fg.rgb.map((value) => (value * scale) / 100),
+        alpha: fg.alpha,
+        hasAlpha
+      })
+      if (contrastRatio(candidate, background) >= target) return candidate
+    }
+  }
+  return '#000000'
+}
+
+/**
+ * Shiki themes are designed for a screen-lit editor, not for print. Several of
+ * vitesse-light's token colors fail WCAG AA on paper — its comment gray sits at
+ * 2.3:1 — so rather than abandon the theme (and its match with the slides),
+ * darken only the colors that fail, in the rendered output where the exact
+ * colors Shiki chose are visible.
+ *
+ * Only the light theme is touched. Shiki emits the dark theme as unused
+ * `--shiki-dark` custom properties; the prose stylesheet has no dark mode, and
+ * a PDF is printed on white regardless.
+ */
+function contrastTransformer (background) {
+  const readableStyle = (style) => style
+    .replace(/(^|;)(\s*)color:\s*(#[0-9a-f]{3,8})/gi,
+      (_, sep, space, color) => `${sep}${space}color:${readableColor(color, background)}`)
+    .replace(/(^|;)(\s*)background-color:\s*#[0-9a-f]{3,8}/gi,
+      (_, sep, space) => `${sep}${space}background-color:${background}`)
+
+  const walk = (node) => {
+    if (typeof node.properties?.style === 'string') {
+      node.properties.style = readableStyle(node.properties.style)
+    }
+    for (const child of node.children ?? []) walk(child)
+  }
+
+  return { name: 'csc118:contrast', root: walk }
+}
+
+/**
+ * The background a code block is drawn on, read from the stylesheet so the
+ * highlighter and the CSS cannot drift apart. Shiki writes the theme's own
+ * background onto the `<pre>` inline, which would otherwise silently win.
+ */
+async function codeBackground () {
+  const css = await readFile(CSS_PATH, 'utf8')
+  return /--code-bg:\s*(#[0-9a-f]{3,8})/i.exec(css)?.[1] ?? FALLBACK_CODE_BG
+}
+
 let markdownPromise = null
 
 /**
@@ -38,7 +152,10 @@ function getMarkdown () {
     // in a printed document, and the id is what a deep link actually needs.
     md.use(anchor)
     // Matches Slidev's own highlighter, so code looks the same in notes and slides.
-    md.use(await Shiki({ themes: { light: 'vitesse-light', dark: 'vitesse-dark' } }))
+    md.use(await Shiki({
+      themes: { light: 'vitesse-light', dark: 'vitesse-dark' },
+      transformers: [contrastTransformer(await codeBackground())]
+    }))
     // markdown-it emits a bare <th>, which accessibility checkers flag: a
     // header cell has to say what it heads. Markdown tables only ever have a
     // header row, so every <th> is a column header.

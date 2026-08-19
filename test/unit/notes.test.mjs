@@ -4,7 +4,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { mkdtemp, rm, stat } from 'node:fs/promises'
 import os from 'node:os'
-import { renderNotesHtml, buildDocument } from '../../scripts/notes.mjs'
+import { renderNotesHtml, buildDocument, contrastRatio, readableColor } from '../../scripts/notes.mjs'
 
 const fixtures = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'fixtures')
 const SAMPLE = path.join(fixtures, 'notes', 'sample.md')
@@ -74,6 +74,58 @@ test('table header cells declare a column scope', () => {
   // The alignment style markdown-it emits survives alongside the new attribute.
   assert.match(rendered.html, /<th style="text-align:right" scope="col">Count<\/th>/)
   assert.doesNotMatch(rendered.html, /<td[^>]*scope=/)
+})
+
+/** WCAG AA for body-size text; code in these documents is well under 18pt. */
+const AA = 4.5
+
+/** Every inline `color:` Shiki wrote, ignoring the unused --shiki-dark ones. */
+function lightThemeColors (html) {
+  const colors = []
+  for (const [, style] of html.matchAll(/style="([^"]*)"/g)) {
+    for (const declaration of style.split(';')) {
+      const [property, value = ''] = declaration.split(':')
+      if (property.trim() === 'color') colors.push(value.trim())
+    }
+  }
+  return colors
+}
+
+test('contrastRatio matches the WCAG reference values', () => {
+  assert.equal(contrastRatio('#000000', '#ffffff'), 21)
+  assert.equal(contrastRatio('#ffffff', '#ffffff'), 1)
+  // vitesse-light's comment gray, the color that started this.
+  assert.ok(Math.abs(contrastRatio('#A0ADA0', '#f5f4ef') - 2.12) < 0.01)
+  // A translucent foreground is composited onto the background first.
+  assert.ok(contrastRatio('#00000077', '#ffffff') < contrastRatio('#000000', '#ffffff'))
+  assert.equal(contrastRatio('currentColor', '#ffffff'), null)
+})
+
+test('readableColor darkens only what fails, and leaves non-colors alone', () => {
+  assert.equal(readableColor('#393a34', '#f5f4ef'), '#393a34')
+  const fixed = readableColor('#A0ADA0', '#f5f4ef')
+  assert.notEqual(fixed, '#A0ADA0')
+  assert.ok(contrastRatio(fixed, '#f5f4ef') >= AA)
+  // An alpha too low to ever reach the target gives up its transparency.
+  assert.equal(readableColor('#b5695977', '#f5f4ef').length, 7)
+  assert.equal(readableColor('inherit', '#f5f4ef'), 'inherit')
+})
+
+test('highlighted code clears AA against the background it is drawn on', () => {
+  const background = /--code-bg:\s*(#[0-9a-f]{3,8})/i.exec(rendered.html)?.[1]
+  assert.ok(background, 'the stylesheet defines a code background')
+  // Shiki writes the theme background inline, where it would outrank the CSS.
+  assert.match(rendered.html, new RegExp(`<pre class="shiki[^>]*background-color:${background}`))
+
+  const colors = lightThemeColors(rendered.html)
+  assert.ok(colors.length > 1, 'the fixture exercises more than one token color')
+  for (const color of colors) {
+    assert.ok(contrastRatio(color, background) >= AA, `${color} on ${background} fails AA`)
+  }
+})
+
+test('the dark theme colors are left untouched for the unused custom property', () => {
+  assert.match(rendered.html, /--shiki-dark:#[0-9A-Fa-f]{6}/)
 })
 
 test('the output is a complete standalone document', () => {

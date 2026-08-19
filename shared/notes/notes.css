@@ -6,7 +6,7 @@
   --ink-2:    #52514e;
   --muted:    #6f6d66;
   --rule:     #d9d7cc;
-  --accent:   #2a78d6;
+  --accent:   #2974d0;
   --code-bg:  #f5f4ef;
 }
 
@@ -61,7 +61,7 @@ li { margin-bottom: 0.35rem; }
 a {
   color: var(--accent);
   text-decoration: none;
-  border-bottom: 1px solid rgba(42, 120, 214, 0.35);
+  border-bottom: 1px solid rgba(41, 116, 208, 0.35);
 }
 
 code {
