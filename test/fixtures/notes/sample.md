@@ -15,6 +15,8 @@ A paragraph with a [link](https://example.com).
 echo "hello"   # the theme's lowest-contrast token
 ```
 
+Table: A **sample** table
+
 | Column | Count |
 | ------ | ----: |
 | a      |     1 |

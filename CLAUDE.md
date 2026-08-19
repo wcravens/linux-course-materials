@@ -133,9 +133,16 @@ in `notes.mjs` darkens *only* the light-theme colors that fail, in the rendered
 output, keeping the hue — the slides are unaffected. The same transformer
 rewrites the theme background Shiki writes inline on the `<pre>`, which would
 otherwise outrank `--code-bg` from the stylesheet; that variable is parsed out of
-`notes.css` so the two cannot drift. Accessibility is a real constraint on this
-output, not a nicety: table headers carry `scope`, and colors are checked against
-the background they actually land on.
+`notes.css` so the two cannot drift.
+
+Accessibility is a real constraint on this output, not a nicety. Table headers
+carry `scope`, colors are checked against the background they actually land on,
+and every table needs a `<caption>` — which Markdown cannot express, so a
+`Table: ...` paragraph directly above a table is consumed into one by a core
+rule in `notes.mjs`. Captions are `.visually-hidden`: the prose already
+introduces each table, and a drawn caption would repeat it. A table without a
+caption warns through `env.warn` rather than failing the build, which is why
+`md.render()` is passed an env.
 
 Playwright is already required by `slidev export`, so the prose pipeline adds
 only `markdown-it`, `markdown-it-anchor`, `@shikijs/markdown-it`, and

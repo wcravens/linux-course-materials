@@ -128,6 +128,23 @@ test('the dark theme colors are left untouched for the unused custom property', 
   assert.match(rendered.html, /--shiki-dark:#[0-9A-Fa-f]{6}/)
 })
 
+test('a Table: line above a table becomes a screen-reader caption', () => {
+  assert.match(rendered.html, /<table>\s*<caption class="visually-hidden">A <strong>sample<\/strong> table<\/caption>/)
+  // The paragraph is consumed, not rendered: the prose already introduces it.
+  assert.doesNotMatch(rendered.html, /<p>Table:/)
+})
+
+test('a table with no caption is reported and still rendered', async () => {
+  const warnings = []
+  const { html } = await renderNotesHtml(path.join(fixtures, 'notes', 'uncaptioned.md'), {
+    warn: (message) => warnings.push(message)
+  })
+
+  assert.equal(warnings.length, 1)
+  assert.match(warnings[0], /table without a caption, under "A section"/)
+  assert.match(html, /<table>\s*<thead>/)
+})
+
 test('the output is a complete standalone document', () => {
   assert.match(rendered.html, /^<!DOCTYPE html>/)
   assert.match(rendered.html, /<\/html>\s*$/)

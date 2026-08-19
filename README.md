@@ -193,6 +193,20 @@ Headings get `id` attributes, so you can deep-link to a section of the notes
 from an LMS page. PDFs are rendered at Letter size with one-inch margins and page
 numbers in the footer.
 
+Give every table a caption. Write it on its own line directly above the table:
+
+```md
+Table: Operating system market share by segment
+
+| Segment | Linux-based | Windows |
+| --- | ---: | ---: |
+```
+
+The line is consumed, not printed — it becomes the table's `<caption>`, read
+aloud by a screen reader before the cells and drawn nowhere, since the prose
+above each table already introduces it. A table without one still builds, but
+the run reports it.
+
 `abstract.md` is a short summary — around 200 words — meant to be pasted or
 embedded as the module's home page in the LMS. It renders to HTML only; a PDF of
 a paragraph has no audience, so that stage is skipped. `notes.md` and `lab.md`

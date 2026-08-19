@@ -204,6 +204,8 @@ thing is knowing which layer you are talking about.
 "Free software" is about liberty, not price. The Free Software Foundation
 defines it by four freedoms:
 
+Table: The four freedoms of free software
+
 | Freedom | What it means |
 | --- | --- |
 | 0 | Run the program for any purpose |
@@ -236,6 +238,8 @@ software, and Linux was his evidence.
 
 Market share for operating systems depends entirely on which market you ask
 about. Here is the picture by segment:
+
+Table: Operating system market share by segment
 
 | Segment | Linux-based | Windows | Apple | Other |
 | --- | ---: | ---: | ---: | ---: |
@@ -293,6 +297,8 @@ made it controversial; a few distributions still avoid it deliberately.
 **Package manager.** How software is installed, updated, and removed, and how
 dependency relationships are tracked. The major families:
 
+Table: Package manager families, their origin, and their front ends
+
 | Format / tool | Origin | Typical front end |
 | --- | --- | --- |
 | RPM | Red Hat | `dnf`, `yum`, `zypper` |
@@ -337,6 +343,8 @@ configuration is done for you.
 
 A small number of distributions were built from scratch. Nearly everything else
 descends from one of them.
+
+Table: Distributions built from scratch, and the year each appeared
 
 | Distribution | Year | Note |
 | --- | --- | --- |
@@ -564,6 +572,8 @@ and be completely different systems to work on.
 ---
 
 ## Key terms
+
+Table: Key terms from this lecture and what each one means
 
 | Term | Meaning |
 | --- | --- |

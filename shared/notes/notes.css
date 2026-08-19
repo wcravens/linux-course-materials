@@ -116,6 +116,21 @@ th {
   color: var(--ink-2);
 }
 
+/* Available to a screen reader, drawn nowhere. Table captions use this: the
+   prose already introduces every table, so a visible caption would repeat it. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
 img {
   max-width: 100%;
   height: auto;

@@ -139,6 +139,54 @@ async function codeBackground () {
   return /--code-bg:\s*(#[0-9a-f]{3,8})/i.exec(css)?.[1] ?? FALLBACK_CODE_BG
 }
 
+/**
+ * `Table: ...` on its own line, immediately above a table, becomes that
+ * table's `<caption>`. Markdown has no caption syntax, and a table without one
+ * gives a screen reader nothing to announce before it starts reading cells.
+ *
+ * The paragraph is consumed rather than rendered: the caption is drawn
+ * off-screen (see `.visually-hidden` in notes.css), because these documents
+ * already introduce each table in the surrounding prose and a visible caption
+ * would say the same thing twice.
+ *
+ * A table with no caption paragraph is reported through `env.warn` and rendered
+ * as before — a missing caption should not fail a build.
+ */
+function tableCaptions (md) {
+  const CAPTION = /^Table:\s*/
+
+  md.core.ruler.push('table_captions', (state) => {
+    const tokens = state.tokens
+    for (let i = 0; i < tokens.length; i += 1) {
+      if (tokens[i].type !== 'table_open') continue
+
+      const inline = tokens[i - 2]
+      const isCaption = tokens[i - 3]?.type === 'paragraph_open' &&
+        inline?.type === 'inline' &&
+        CAPTION.test(inline.content)
+
+      if (!isCaption) {
+        const heading = tokens.slice(0, i).reverse().find((t) => t.type === 'inline')
+        state.env?.warn?.(`table without a caption${heading ? `, under "${heading.content}"` : ''}`)
+        continue
+      }
+
+      inline.children = md.parseInline(inline.content.replace(CAPTION, ''), state.env)[0].children
+      tokens[i].meta = { ...tokens[i].meta, caption: inline }
+      tokens.splice(i - 3, 3)
+      i -= 3
+    }
+  })
+
+  md.renderer.rules.table_open = (tokens, idx, options, env, self) => {
+    const caption = tokens[idx].meta?.caption
+    const open = self.renderToken(tokens, idx, options)
+    if (!caption) return open
+    return `${open}<caption class="visually-hidden">` +
+      `${self.renderInline(caption.children, options, env)}</caption>\n`
+  }
+}
+
 let markdownPromise = null
 
 /**
@@ -156,6 +204,7 @@ function getMarkdown () {
       themes: { light: 'vitesse-light', dark: 'vitesse-dark' },
       transformers: [contrastTransformer(await codeBackground())]
     }))
+    tableCaptions(md)
     // markdown-it emits a bare <th>, which accessibility checkers flag: a
     // header cell has to say what it heads. Markdown tables only ever have a
     // header row, so every <th> is a column header.
@@ -241,7 +290,7 @@ export async function renderNotesHtml (sourcePath, options = {}) {
     readFile(CSS_PATH, 'utf8')
   ])
 
-  const body = await inlineImages(md.render(content), publicDir, warn)
+  const body = await inlineImages(md.render(content, { warn }), publicDir, warn)
 
   // Replacements go through a function so `$&`-style sequences in the
   // rendered body are treated as literal text.
