@@ -1,0 +1,26 @@
+/* Table typography, and the `.notes` block used for source footnotes
+   beneath a table or figure.
+
+   Scoped to `.slidev-layout` deliberately: Slidev's own client styles set
+   `.slidev-layout td, .slidev-layout th { padding: .75rem .5rem }`, which
+   outranks a bare `table td` selector. */
+
+.slidev-layout table {
+  font-size: 0.95rem;
+}
+
+.slidev-layout table th,
+.slidev-layout table td {
+  padding: 0.42rem 0.6rem;
+}
+
+.slidev-layout .notes {
+  font-size: 0.68rem;
+  line-height: 1.45;
+  opacity: 0.72;
+  margin-top: 1.2rem;
+}
+
+.slidev-layout .notes p {
+  margin: 0.3rem 0;
+}

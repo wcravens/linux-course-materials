@@ -1,0 +1,3 @@
+/* Course-wide deck styles, shared by every CSC 118 lecture. */
+@import './tables.css';
+@import './viz.css';
