@@ -88,6 +88,10 @@ templates/lecture/        # scaffold source for `npm run new`
 course.json               # course title, term, and deploy base
 ```
 
+Everything one lecture needs sits in its own directory, so a lecture can be
+moved or archived as a unit and optional artifacts need no parallel numbering
+elsewhere.
+
 `public/` is per-lecture because Slidev resolves it relative to the deck, and
 serves it at `/`. The notes renderer resolves root-relative image paths against
 that same directory, so `![Diagram](/diagram.png)` works identically in
@@ -184,6 +188,10 @@ that class and would otherwise outrank a bare element selector.
 is no separate template per document type. Code blocks are highlighted with
 Shiki, the same highlighter Slidev uses, so code looks identical in the notes
 and on the slides.
+
+Headings get anchor links, so you can deep-link to a section of the notes from
+an LMS page. PDFs are rendered at Letter size with one-inch margins and page
+numbers in the footer.
 
 `abstract.md` is a short summary — around 200 words — meant to be pasted or
 embedded as the module's home page in the LMS. It renders to HTML only; a PDF of
