@@ -39,6 +39,13 @@ function getMarkdown () {
     md.use(anchor)
     // Matches Slidev's own highlighter, so code looks the same in notes and slides.
     md.use(await Shiki({ themes: { light: 'vitesse-light', dark: 'vitesse-dark' } }))
+    // markdown-it emits a bare <th>, which accessibility checkers flag: a
+    // header cell has to say what it heads. Markdown tables only ever have a
+    // header row, so every <th> is a column header.
+    md.renderer.rules.th_open = (tokens, idx, options, env, self) => {
+      tokens[idx].attrSet('scope', 'col')
+      return self.renderToken(tokens, idx, options)
+    }
     return md
   })()
   return markdownPromise

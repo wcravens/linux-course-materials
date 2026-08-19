@@ -14,3 +14,7 @@ A paragraph with a [link](https://example.com).
 ```sh
 echo "hello"
 ```
+
+| Column | Count |
+| ------ | ----: |
+| a      |     1 |

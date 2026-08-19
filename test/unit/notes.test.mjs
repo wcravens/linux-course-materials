@@ -69,6 +69,13 @@ test('code blocks are highlighted by Shiki', () => {
   assert.match(rendered.html, /<span style="color:/)
 })
 
+test('table header cells declare a column scope', () => {
+  assert.match(rendered.html, /<th scope="col">Column<\/th>/)
+  // The alignment style markdown-it emits survives alongside the new attribute.
+  assert.match(rendered.html, /<th style="text-align:right" scope="col">Count<\/th>/)
+  assert.doesNotMatch(rendered.html, /<td[^>]*scope=/)
+})
+
 test('the output is a complete standalone document', () => {
   assert.match(rendered.html, /^<!DOCTYPE html>/)
   assert.match(rendered.html, /<\/html>\s*$/)
