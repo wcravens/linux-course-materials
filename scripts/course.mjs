@@ -32,9 +32,9 @@ const USAGE = `Usage: node scripts/course.mjs <command> [selector...]
 
 Commands:
   dev <selector>        Start the Slidev dev server for one lecture
-  build [selector...]   Build slides, PDFs, notes, and the course index
+  build [selector...]   Build slides, PDFs, prose documents, and the course index
   export [selector...]  Export slide PDFs only
-  notes [selector...]   Render notes and lab documents only
+  notes [selector...]   Render abstracts, notes, and lab documents only
   new <NN> <title>      Scaffold a new lecture from templates/lecture/
   list                  List the lectures in this course
 
@@ -94,6 +94,7 @@ async function cmdList (lectures) {
   }
   for (const lecture of lectures) {
     const artifacts = [
+      lecture.abstractPath && 'abstract',
       lecture.notesPath && 'notes',
       lecture.labPath && 'lab',
       lecture.codeDir && 'code'
@@ -133,17 +134,25 @@ async function exportSlides (lecture) {
   await run(SLIDEV_BIN, ['export', lecture.slidesPath, '--output', outPath])
 }
 
-/** Render `notes.md` and, when present, `lab.md` through the same pipeline. */
+/**
+ * Render every prose document a lecture has through the same pipeline.
+ * The abstract is HTML only — it is an LMS module blurb, not a handout.
+ */
 async function buildProse (lecture) {
   const outDir = path.join(DIST_DIR, lecture.id)
-  const sources = [lecture.notesPath, lecture.labPath].filter(Boolean)
+  const documents = [
+    { source: lecture.abstractPath, pdf: false },
+    { source: lecture.notesPath, pdf: true },
+    { source: lecture.labPath, pdf: true }
+  ].filter((doc) => doc.source)
 
-  if (sources.length === 0) {
-    process.stderr.write(`  ! ${lecture.id}: no notes.md or lab.md\n`)
+  if (documents.length === 0) {
+    process.stderr.write(`  ! ${lecture.id}: no abstract.md, notes.md, or lab.md\n`)
     return
   }
-  for (const source of sources) {
+  for (const { source, pdf } of documents) {
     await buildDocument(source, outDir, {
+      pdf,
       publicDir: lecture.publicDir,
       warn: warnFor(lecture)
     })
@@ -222,7 +231,7 @@ async function cmdNew (args) {
   await cp(TEMPLATE_DIR, dir, { recursive: true })
 
   const substitutions = { '{{TITLE}}': title, '{{NUMBER}}': String(Number(number)) }
-  for (const file of ['slides.md', 'notes.md']) {
+  for (const file of ['slides.md', 'abstract.md', 'notes.md']) {
     const filePath = path.join(dir, file)
     if (!existsSync(filePath)) continue
     let text = await readFile(filePath, 'utf8')

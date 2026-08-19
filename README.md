@@ -32,7 +32,7 @@ npx playwright install chromium
 | `npm run build` | Build every lecture, then regenerate `dist/index.html` |
 | `npm run build -- 01` | Build one lecture |
 | `npm run export` | Export slide PDFs only |
-| `npm run notes` | Render notes and lab documents only |
+| `npm run notes` | Render abstracts, notes, and lab documents only |
 | `npm run new -- 02 "Filesystem Basics"` | Scaffold a new lecture |
 | `npm run list` | List the lectures in this course |
 | `npm test` | Fast unit tests |
@@ -64,8 +64,8 @@ npm run new -- 02 "Filesystem Basics"
 ```
 
 This copies `templates/lecture/` to `lectures/02-filesystem-basics/`,
-substituting the number and title into the `slides.md` and `notes.md`
-frontmatter. It refuses to overwrite an existing directory. There is no manifest
+substituting the number and title into the `slides.md`, `abstract.md`, and
+`notes.md` frontmatter. It refuses to overwrite an existing directory. There is no manifest
 to update: the runner discovers lectures by listing `lectures/*/` and reads each
 title from the deck's frontmatter.
 
@@ -75,6 +75,7 @@ title from the deck's frontmatter.
 lectures/
 └── 01-what-is-linux/
     ├── slides.md   # Slidev deck
+    ├── abstract.md # short module summary for the LMS home page
     ├── notes.md    # prose notes
     ├── lab.md      # optional; built only when present
     ├── public/     # images, shared by slides and notes
@@ -100,6 +101,7 @@ dist/
 └── 01-what-is-linux/
     ├── slides/                      # Slidev SPA, iframe-embeddable
     ├── slides.pdf
+    ├── abstract.html                # HTML only; no PDF
     ├── notes.html
     ├── notes.pdf
     └── code/
@@ -175,12 +177,21 @@ The addon currently supplies two style modules:
 Both are scoped under `.slidev-layout`, because Slidev's own client styles use
 that class and would otherwise outrank a bare element selector.
 
-### Notes and labs
+### Abstracts, notes, and labs
 
-`notes.md` and `lab.md` are plain Markdown with a frontmatter `title` and
-optional `subtitle`. Both go through the same renderer — there is no separate
-lab template. Code blocks are highlighted with Shiki, the same highlighter
-Slidev uses, so code looks identical in the notes and on the slides.
+`abstract.md`, `notes.md`, and `lab.md` are plain Markdown with a frontmatter
+`title` and optional `subtitle`. All three go through the same renderer — there
+is no separate template per document type. Code blocks are highlighted with
+Shiki, the same highlighter Slidev uses, so code looks identical in the notes
+and on the slides.
+
+`abstract.md` is a short summary — around 200 words — meant to be pasted or
+embedded as the module's home page in the LMS. It renders to HTML only; a PDF of
+a paragraph has no audience, so that stage is skipped. `notes.md` and `lab.md`
+each produce both HTML and PDF.
+
+All three files are optional in the sense that the build skips what is absent,
+but a lecture with none of them is reported as a warning.
 
 ## Tests
 

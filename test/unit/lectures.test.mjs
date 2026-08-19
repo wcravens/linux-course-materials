@@ -58,9 +58,11 @@ test('optional artifacts are detected per lecture', async () => {
   const orphan = lectures.find((l) => l.id === 'notes-only')
 
   assert.equal(intro.notesPath, null)
+  assert.equal(intro.abstractPath, null)
   assert.equal(intro.labPath, null)
   assert.equal(intro.codeDir, null)
   assert.ok(orphan.notesPath?.endsWith('notes.md'))
+  assert.ok(orphan.abstractPath?.endsWith('abstract.md'))
 })
 
 test('a selector resolves by number, slug, or full directory name', async () => {

@@ -16,7 +16,7 @@ const DIST = path.join(repoRoot, 'dist', LECTURE)
 test('build produces every artifact for lecture 01', { timeout: 600_000 }, async (t) => {
   await run('node', [path.join(repoRoot, 'scripts', 'course.mjs'), 'build', '01'], { cwd: repoRoot })
 
-  for (const artifact of ['slides/index.html', 'slides.pdf', 'notes.html', 'notes.pdf']) {
+  for (const artifact of ['slides/index.html', 'slides.pdf', 'abstract.html', 'notes.html', 'notes.pdf']) {
     await t.test(`${artifact} exists and is non-empty`, async () => {
       const info = await stat(path.join(DIST, artifact))
       assert.ok(info.isFile(), `${artifact} should be a file`)
@@ -41,6 +41,10 @@ test('build produces every artifact for lecture 01', { timeout: 600_000 }, async
     assert.match(html, /CSC 118/)
     assert.match(html, new RegExp(`\\./${LECTURE}/slides/index\\.html`))
     assert.match(html, new RegExp(`\\./${LECTURE}/notes\\.pdf`))
+  })
+
+  await t.test('the abstract is HTML only', async () => {
+    await assert.rejects(stat(path.join(DIST, 'abstract.pdf')))
   })
 
   await t.test('both PDFs are real PDFs', async () => {

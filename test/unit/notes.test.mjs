@@ -2,7 +2,9 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { renderNotesHtml } from '../../scripts/notes.mjs'
+import { mkdtemp, rm, stat } from 'node:fs/promises'
+import os from 'node:os'
+import { renderNotesHtml, buildDocument } from '../../scripts/notes.mjs'
 
 const fixtures = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'fixtures')
 const SAMPLE = path.join(fixtures, 'notes', 'sample.md')
@@ -71,4 +73,16 @@ test('the output is a complete standalone document', () => {
 test('a document without a frontmatter title falls back to its filename', async () => {
   const { title } = await renderNotesHtml(path.join(fixtures, 'lectures', 'notes-only', 'notes.md'))
   assert.equal(title, 'notes')
+})
+
+test('buildDocument with pdf: false writes HTML and skips the PDF', async (t) => {
+  const outDir = await mkdtemp(path.join(os.tmpdir(), 'csc118-notes-'))
+  t.after(() => rm(outDir, { recursive: true, force: true }))
+
+  const result = await buildDocument(SAMPLE, outDir, { publicDir: PUBLIC, pdf: false })
+
+  assert.equal(result.pdfPath, null)
+  assert.ok(result.htmlPath.endsWith('sample.html'))
+  assert.ok((await stat(result.htmlPath)).size > 0)
+  await assert.rejects(stat(path.join(outDir, 'sample.pdf')))
 })

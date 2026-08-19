@@ -165,19 +165,24 @@ export async function renderPdf (html, outputPath, { title } = {}) {
 }
 
 /**
- * Full pipeline for one prose document: write `<name>.html` and `<name>.pdf`
- * into `outDir`. Returns the paths written.
+ * Full pipeline for one prose document: write `<name>.html` and, unless
+ * `pdf` is false, `<name>.pdf` into `outDir`. Returns the paths written,
+ * with `pdfPath` null when the PDF was skipped.
+ *
+ * Skipping matters for short documents like an abstract, which is only ever
+ * read as an LMS page: the PDF has no audience and costs a browser launch.
  */
 export async function buildDocument (sourcePath, outDir, options = {}) {
+  const { pdf = true, ...renderOptions } = options
   const name = path.basename(sourcePath, '.md')
-  const { html, title } = await renderNotesHtml(sourcePath, options)
+  const { html, title } = await renderNotesHtml(sourcePath, renderOptions)
 
   await mkdir(outDir, { recursive: true })
   const htmlPath = path.join(outDir, `${name}.html`)
-  const pdfPath = path.join(outDir, `${name}.pdf`)
+  const pdfPath = pdf ? path.join(outDir, `${name}.pdf`) : null
 
   await writeFile(htmlPath, html, 'utf8')
-  await renderPdf(html, pdfPath, { title })
+  if (pdfPath) await renderPdf(html, pdfPath, { title })
 
   return { htmlPath, pdfPath, title }
 }

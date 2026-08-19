@@ -17,7 +17,7 @@ export class SelectorError extends Error {}
 export const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 
 /** Optional per-lecture artifacts, keyed by the file or directory they need. */
-const OPTIONAL_FILES = { lab: 'lab.md' }
+const OPTIONAL_FILES = { abstract: 'abstract.md', lab: 'lab.md' }
 const OPTIONAL_DIRS = { code: 'code', public: 'public' }
 
 /**

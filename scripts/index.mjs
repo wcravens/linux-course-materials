@@ -17,6 +17,7 @@ function escapeHtml (value) {
 
 /** Artifact links, in the order they should be offered to a student. */
 const ARTIFACTS = [
+  { file: 'abstract.html', label: 'Abstract' },
   { file: 'slides/index.html', label: 'Slides' },
   { file: 'slides.pdf', label: 'Slides (PDF)' },
   { file: 'notes.html', label: 'Notes' },
