@@ -189,8 +189,8 @@ is no separate template per document type. Code blocks are highlighted with
 Shiki, the same highlighter Slidev uses, so code looks identical in the notes
 and on the slides.
 
-Headings get anchor links, so you can deep-link to a section of the notes from
-an LMS page. PDFs are rendered at Letter size with one-inch margins and page
+Headings get `id` attributes, so you can deep-link to a section of the notes
+from an LMS page. PDFs are rendered at Letter size with one-inch margins and page
 numbers in the footer.
 
 `abstract.md` is a short summary — around 200 words — meant to be pasted or

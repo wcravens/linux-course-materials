@@ -34,9 +34,9 @@ let markdownPromise = null
 function getMarkdown () {
   markdownPromise ??= (async () => {
     const md = new MarkdownIt({ html: true, linkify: true, typographer: true })
-    md.use(anchor, {
-      permalink: anchor.permalink.linkInsideHeader({ symbol: '#', placement: 'after' })
-    })
+    // Heading ids only: a visible permalink glyph after every heading is noise
+    // in a printed document, and the id is what a deep link actually needs.
+    md.use(anchor)
     // Matches Slidev's own highlighter, so code looks the same in notes and slides.
     md.use(await Shiki({ themes: { light: 'vitesse-light', dark: 'vitesse-dark' } }))
     return md

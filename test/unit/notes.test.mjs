@@ -43,6 +43,11 @@ test('headings get anchor ids', () => {
   assert.match(rendered.html, /<h2 id="a-heading"/)
 })
 
+test('headings carry no visible permalink link', () => {
+  assert.doesNotMatch(rendered.html, /header-anchor/)
+  assert.match(rendered.html, /<h2 id="a-heading"[^>]*>A heading<\/h2>/)
+})
+
 test('CSS is inlined in a style element rather than linked', () => {
   assert.match(rendered.html, /<style>[\s\S]*\.doc-header[\s\S]*<\/style>/)
   assert.doesNotMatch(rendered.html, /<link[^>]+stylesheet/)

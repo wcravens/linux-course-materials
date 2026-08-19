@@ -129,17 +129,8 @@ hr {
   margin: 2rem 0;
 }
 
-/* Anchors added by markdown-it-anchor: visible on screen, hidden in print. */
-.header-anchor {
-  border: 0;
-  color: var(--rule);
-  margin-left: 0.35rem;
-  text-decoration: none;
-}
-
 @media print {
   .doc { max-width: none; padding: 0; }
-  .header-anchor { display: none; }
   pre, blockquote, table, img { break-inside: avoid; }
   h2, h3, h4 { break-after: avoid; }
   a { color: var(--ink); border-bottom: 0; }
