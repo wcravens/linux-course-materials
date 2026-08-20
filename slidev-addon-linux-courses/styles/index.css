@@ -1,0 +1,3 @@
+/* Course-wide deck styles, shared by every lecture deck. */
+@import './tables.css';
+@import './viz.css';
