@@ -302,9 +302,18 @@ layout: section
 
 ---
 
-# Recommended Reading & Reference
+# Further reading
 
 - [LinuxCommand.org — William Shotts](https://linuxcommand.org)
 - [The Linux Command Line — William Shotts](https://linuxcommand.org/tlcl.php)
 - [Linux Fundamentals — Paul Cobbaut](https://linux-training.be/linuxfun.pdf)
 - [Linux Networking — Paul Cobbaut](http://linux-training.be/linuxnet.pdf)
+- [The Linux History Archive — Torvalds's original announcement](https://www.cs.cmu.edu/~awb/linux.history.html)
+- [GNU — What is Free Software?](https://www.gnu.org/philosophy/free-sw.en.html)
+- [GNU (Wikipedia)](https://en.wikipedia.org/wiki/GNU)
+- [Free Software Foundation](https://www.fsf.org/)
+- [The Cathedral and the Bazaar](https://en.wikipedia.org/wiki/The_Cathedral_and_the_Bazaar)
+- [The Linux Family Tree — DistroWatch](https://distrowatch.com/images/other/distro-family-tree.png)
+- [Linux distribution (Wikipedia)](https://en.wikipedia.org/wiki/Linux_distribution)
+- [Linux From Scratch](https://www.linuxfromscratch.org/)
+- [TOP500 supercomputer list](https://www.top500.org/lists/top500/)
