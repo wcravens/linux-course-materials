@@ -1,27 +1,24 @@
 {
-  "name": "csc118-2026fa",
-  "description": "CSC 118 — Introduction to Linux: lecture decks, notes, and labs",
+  "name": "linux-courses",
+  "description": "Linux course materials: lecture decks, notes, and labs",
   "private": true,
   "type": "module",
+  "workspaces": [
+    "course-kit",
+    "slidev-addon-linux-courses"
+  ],
   "scripts": {
-    "dev": "node scripts/course.mjs dev",
-    "build": "node scripts/course.mjs build",
-    "export": "node scripts/course.mjs export",
-    "notes": "node scripts/course.mjs notes",
-    "new": "node scripts/course.mjs new",
-    "list": "node scripts/course.mjs list",
-    "test": "node --test \"test/unit/**/*.test.mjs\"",
-    "test:e2e": "node --test \"test/e2e/**/*.test.mjs\""
+    "dev": "course dev",
+    "build": "course build",
+    "export": "course export",
+    "notes": "course notes",
+    "new": "course new",
+    "list": "course list",
+    "test": "npm test --workspace course-kit",
+    "test:e2e": "npm run test:e2e --workspace course-kit"
   },
   "dependencies": {
     "@slidev/cli": "^52.19.0",
     "@slidev/theme-seriph": "^0.25.0"
-  },
-  "devDependencies": {
-    "@shikijs/markdown-it": "^4.4.3",
-    "gray-matter": "^4.0.3",
-    "markdown-it": "^14.3.0",
-    "markdown-it-anchor": "^9.2.1",
-    "playwright-chromium": "^1.62.1"
   }
 }

@@ -3,3 +3,4 @@ dist/
 .slidev/
 *.local
 *.swp
+docs/superpowers/
