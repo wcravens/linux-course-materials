@@ -50,8 +50,7 @@ Presenter view (notes, timer, next-slide preview) is at
 
 ### Choosing a course
 
-Inside a course directory the course is implied, and the tool behaves exactly as
-it did when the repository held one course:
+Inside a course directory the course is implied.
 
 ```sh
 cd courses/csc-118-intro-to-linux
