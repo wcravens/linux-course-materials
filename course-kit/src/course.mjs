@@ -186,25 +186,62 @@ function warnFor (course, lecture) {
 
 // --- commands ---------------------------------------------------------------
 
-async function cmdList (courses) {
+/** The optional artifacts an entry actually has, for the listing. */
+function artifactTags (entry) {
+  return [
+    entry.abstractPath && 'abstract',
+    entry.tutorialPath && 'tutorial',
+    entry.notesPath && 'notes',
+    entry.labPath && 'lab',
+    entry.hasSlides && entry.kind === 'module' && 'slides',
+    entry.codeDir && 'code'
+  ].filter(Boolean)
+}
+
+function logEntry (entry, indent = '  ') {
+  const tags = artifactTags(entry)
+  const suffix = tags.length > 0 ? `  [${tags.join(', ')}]` : ''
+  log(`${indent}${entry.id.padEnd(28)} ${entryLabel(entry)}${suffix}`)
+}
+
+async function cmdList (courses, context) {
+  const includedBy = new Map()
+
   for (const course of courses) {
     log(`${entryLabel(course)}  (${course.id})`)
     const lectures = await loadLectures(course)
 
     if (lectures.length === 0) {
       log('  No lectures yet. Create one with: npm run new -- 01 "Title"')
-      continue
     }
-    for (const lecture of lectures) {
-      const artifacts = [
-        lecture.abstractPath && 'abstract',
-        lecture.notesPath && 'notes',
-        lecture.labPath && 'lab',
-        lecture.codeDir && 'code'
-      ].filter(Boolean)
-      const suffix = artifacts.length > 0 ? `  [${artifacts.join(', ')}]` : ''
-      log(`  ${lecture.id.padEnd(28)} ${entryLabel(lecture)}${suffix}`)
+    for (const lecture of lectures) logEntry(lecture)
+
+    const modules = await loadModules(course, context)
+    if (modules.length > 0) {
+      log('  Modules:')
+      for (const mod of modules) {
+        logEntry(mod, '    ')
+        const users = includedBy.get(mod.id) ?? []
+        users.push(course.code ?? course.id)
+        includedBy.set(mod.id, users)
+      }
     }
+    log('')
+  }
+
+  // Only for a bare `list`. Built from one course, "which courses include
+  // this" would be an answer drawn from a sample of one, and so misleading.
+  if (courses.length < 2) return
+
+  const all = await discoverModules(context.modulesDir)
+  if (all.length === 0) return
+
+  log('Modules (workspace)')
+  for (const mod of all) {
+    const users = includedBy.get(mod.id) ?? []
+    const suffix = users.length > 0 ? `  [${users.join(', ')}]` : '  (included by no course)'
+    const label = mod.hasTutorial ? entryLabel(mod) : `${mod.id} (no tutorial.md)`
+    log(`  ${mod.id.padEnd(28)} ${label}${suffix}`)
   }
 }
 
@@ -457,7 +494,7 @@ async function main (argv) {
   }
   const courses = await selectCourses(path.join(workspaceRoot, COURSES_DIRNAME), courseSelector)
 
-  if (command === 'list') return cmdList(courses)
+  if (command === 'list') return cmdList(courses, context)
 
   if (command === 'new') {
     const { isModule, args: newArgs } = extractModuleFlag(args)
