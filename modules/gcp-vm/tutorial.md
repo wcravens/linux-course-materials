@@ -12,7 +12,7 @@ your own computer is touched, and nothing has to be installed on it either.
 
 The trade is that the machine belongs to someone else and costs money for as
 long as it exists. That single fact shapes everything below, and it is why the
-last section of this tutorial matters more than the first.
+section on stopping and deleting matters more than the first one.
 
 This walkthrough uses Google Cloud. The same ideas carry over to other
 providers with different command names.
@@ -33,10 +33,16 @@ certain US regions. Treat both as a discount rather than a guarantee. Free tier
 terms change, they apply only to specific machine types in specific regions,
 and anything outside those limits is billed to the card you registered.
 
-So the working assumption for this module is: **a running VM costs money.** The
-one you build here is deliberately tiny, and if you follow the last section you
-will have it for minutes rather than months. Check the current Compute Engine
-pricing page before you leave anything running overnight.
+So the working assumption for this module is: **a running VM costs money.** It
+is worth being precise about why the free tier does not change that. Always
+Free covers 30 GB-months of *standard* persistent disk, but current versions of
+`gcloud` give a new boot disk the balanced type instead, which is not covered;
+and since 2024 an external IPv4 address attached to an instance is billed by
+the hour on its own. A machine sitting on "the free tier" therefore still
+accrues small charges. The one you build here is deliberately tiny, and if you
+follow the section on stopping and deleting you will have it for minutes rather
+than months. Check the current Compute Engine pricing page before you leave
+anything running overnight.
 
 ## Projects
 
@@ -154,7 +160,9 @@ This is an ordinary SSH session with the tedious parts done for you. On the
 first run, `gcloud` generates an SSH key pair if you do not already have one,
 stores it under your home directory, publishes the public half to the project's
 metadata so Compute Engine can install it, and creates a matching user account
-on the VM. Then it connects. You are never asked to copy a key by hand.
+on the VM. Then it connects. You are never asked to copy a key by hand. On a
+project where OS Login is enforced, the key is attached to your OS Login
+profile rather than to project metadata, but nothing you type changes.
 
 The first connection can take a few seconds longer than later ones while that
 key propagates, and if you chose a passphrase for the key you will be asked for
@@ -167,12 +175,23 @@ The programs included with the Debian GNU/Linux system are free software;
 the exact distribution terms for each program are described in the
 individual files in /usr/share/doc/*/copyright.
 
-student@linux-lab:~$
+yourname@linux-lab:~$
 ```
 
-That last line is the prompt of a real Linux machine, and the interesting thing
-about it is how unremarkable it is. The shell you have just landed in behaves
-exactly like the one on any other Debian system.
+That last line is the prompt of a real Linux machine. The username in it is
+derived from your Google account rather than fixed, so yours will read
+differently. The interesting thing about the prompt is how unremarkable it is:
+the shell you have just landed in behaves exactly like the one on any other
+Debian system.
+
+If the connection fails outright, the likely cause is that your VM has no
+external address. A school or company Google Cloud organisation often sets a
+policy forbidding them, and the effect is confusing, because creating the
+instance still succeeds and only the connection attempt fails. The fix is to
+tunnel the session through Identity-Aware Proxy by adding
+`--tunnel-through-iap` to the same `gcloud compute ssh` command. On a
+locked-down project that is the normal way in, not a sign that you did anything
+wrong.
 
 ## Looking around
 
@@ -203,8 +222,9 @@ somewhere in Iowa.
 
 This section is not optional, and it is the one people skip.
 
-**A running instance bills for every hour it exists**, whether or not you are
-logged in and whether or not it is doing anything. Closing your browser does
+**A running instance bills for every second it exists**, charged per second
+with a one minute minimum, whether or not you are logged in and whether or not
+it is doing anything. Closing your browser does
 not stop it. Losing interest does not stop it.
 
 Stopping the instance halts the virtual CPU and ends the compute charge:

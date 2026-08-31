@@ -17,6 +17,6 @@ computer. The instance is deliberately tiny and falls within Google's free
 tier allowances, but those terms change and anything beyond them is billed.
 
 Delete your instance when you are finished. A running virtual machine costs
-money for every hour it exists, and even a stopped one keeps billing for its
-disk. The last section of the tutorial shows how, and it is the part you must
-not skip.
+money for every second it runs, and even a stopped one keeps billing for its
+disk. The tutorial's section on stopping and deleting shows how, and it is the
+part you must not skip.
