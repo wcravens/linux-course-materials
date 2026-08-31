@@ -9,7 +9,7 @@
 // Three roots replace the single repository root the tooling used when it
 // served one course:
 //
-//   packageRoot    the kit's own assets and templates   (lectures.mjs)
+//   packageRoot    the kit's own assets and templates   (content.mjs)
 //   courseRoot     course.json, lectures/, dist/        (cwd, or --course)
 //   workspaceRoot  the Slidev binary, and courses/      (nearest ancestor
 //                                                        holding it)

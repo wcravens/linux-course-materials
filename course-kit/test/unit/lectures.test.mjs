@@ -3,7 +3,6 @@ import assert from 'node:assert/strict'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { discoverLectures, parseLectureId } from '../../src/lectures.mjs'
-import { resolveSelector, resolveSelectors, matchesSelector } from '../../src/content.mjs'
 
 const fixtures = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'fixtures')
 const LECTURES = path.join(fixtures, 'lectures')

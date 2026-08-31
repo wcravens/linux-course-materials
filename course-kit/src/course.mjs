@@ -499,7 +499,7 @@ async function main (argv) {
   if (command === 'new') {
     const { isModule, args: newArgs } = extractModuleFlag(args)
     if (isModule) return cmdNewModule(newArgs, context)
-    return cmdNew(oneCourse(courses, 'new'), newArgs, context)
+    return cmdNew(oneCourse(courses, 'new'), newArgs)
   }
   if (command in SINGLE_COURSE) {
     return SINGLE_COURSE[command](oneCourse(courses, command), args, context)

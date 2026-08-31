@@ -16,6 +16,11 @@ of courses under `courses/`. **A course is content, not software:** it has no
 files no matter how many courses exist. That is what keeps one `node_modules`
 and one Chromium for the whole repository.
 
+Alongside `courses/` sits `modules/`: self-contained tutorial material on one
+topic — writing Markdown, building a VM — that belongs to no single course and
+is included by name from any number of them. A module is content in exactly the
+sense a course is, with no `package.json` of its own.
+
 ## Commands
 
 Run from the workspace root:
@@ -28,6 +33,7 @@ npm run dev   -- -c csc-118 01       # dev needs exactly one of each
 npm run export                       # slide PDFs only
 npm run notes                        # prose documents only (fast; no Slidev)
 npm run new   -- -c csc-118 02 "Title"
+npm run new   -- --module markdown "Writing Markdown"   # a shared module
 npm run list                         # every course with its lectures nested
 npm test                             # unit tests (fast, fixture-based)
 npm run test:e2e                     # real build of CSC 118 lecture 01; launches a browser
@@ -55,45 +61,65 @@ default).
 
 ### Selectors
 
-There are two selector dimensions, resolved by the same machinery.
+There are two selector dimensions, resolved by the same machinery in
+`content.mjs`.
 
-A **lecture selector** is positional. `build`, `export`, and `notes` take zero or
-more and operate on every lecture when given none; `dev` requires exactly one. A
-selector matches by number, slug, or full directory name.
+A **content selector** is positional and names either a lecture or a module.
+`build`, `export`, and `notes` take zero or more and operate on everything the
+course holds when given none; `dev` requires exactly one. A lecture matches by
+number, slug, or full directory name; a module, which carries no number, matches
+by its directory name.
 
 A **course selector** is the `-c` / `--course` flag, matching by code, slug, or
 full directory name — `csc-118`, `csc118`, `intro-to-linux`, and
 `csc-118-intro-to-linux` all name the same course. A flag rather than a second
-positional argument, so the lecture-selector grammar is untouched.
+positional argument, so the content-selector grammar is untouched.
 
-Matching is **exact, not substring** in both dimensions — `shell` does not match
-`shell-basics`. Ambiguous and unknown selectors both error and name the
+Matching is **exact, not substring** in either dimension — `shell` does not
+match `shell-basics`. Ambiguous and unknown selectors both error and name the
 candidates.
 
 ## Architecture
 
 `course-kit/src/course.mjs` is the CLI and the only orchestrator, reached through
 `course-kit/bin/course.mjs` (the `course` bin, which npm links into the workspace
-`node_modules/.bin`). It delegates to four modules: `courses.mjs` (course
-discovery and the three roots), `lectures.mjs` (lecture discovery and the shared
-selector machinery), `notes.mjs` (Markdown → HTML → PDF), `index.mjs` (a course's
+`node_modules/.bin`). It delegates to six modules: `content.mjs` (the shared
+selector machinery and the kit's own root), `courses.mjs` (course discovery and
+two of the three roots), `lectures.mjs` (lecture discovery), `modules.mjs`
+(module discovery), `notes.mjs` (Markdown → HTML → PDF), `index.mjs` (a course's
 index page).
 
-### Discovery is the source of truth, twice
+### Discovery is the source of truth, three times
 
-There is no course manifest and no lecture manifest. `discoverCourses()` lists
-`courses/*/` and keeps the directories holding a `course.json`, reading the title
-from it; `discoverLectures()` lists one course's `lectures/*/`, sorts by numeric
-prefix, and reads each title from the `slides.md` frontmatter. Adding or renaming
-either requires no registration anywhere.
+There is no course manifest, no lecture manifest, and no module manifest.
+`discoverCourses()` lists `courses/*/` and keeps the directories holding a
+`course.json`, reading the title from it; `discoverLectures()` lists one
+course's `lectures/*/`, sorts by numeric prefix, and reads each title from the
+`slides.md` frontmatter. Adding or renaming either requires no registration
+anywhere.
+
+`discoverModules()` lists `modules/*/`, reading each title from that
+directory's `tutorial.md` frontmatter. `tutorial.md` marks a module the way
+`slides.md` marks a lecture and `course.json` marks a course.
+
+Modules are prose-first: `tutorial.md` is the only required file, and
+`slides.md` is one more optional artifact. They are unnumbered, because a
+module is a topic rather than a position in a sequence; a course's ordering
+comes from the list in its `course.json`.
 
 A course directory name parses as `<code>-<slug>`:
 `csc-118-intro-to-linux` yields the code `csc-118` and the slug
 `intro-to-linux`. A name that does not parse still matches by id.
 
-`course.json` holds only `{ title, base }`. **Terms are not modeled** — a course
-directory represents the course as currently taught and is edited in place each
-semester, because rebuilding a past term's artifacts is not a use case.
+`course.json` holds `{ title, base, modules }`, the last being the shared
+modules this course includes, by name, in the order it wants them. Absent
+means none. Resolution happens in `course.mjs` rather than `courses.mjs`,
+because `modules/` hangs off the workspace root and a course does not know
+about that.
+
+**Terms are not modeled** — a course directory represents the course as
+currently taught and is edited in place each semester, because rebuilding a
+past term's artifacts is not a use case.
 
 Per-lecture optional artifacts are declared by two maps at the top of
 `lectures.mjs`:
@@ -115,9 +141,9 @@ The tooling once hung every path off a single `repoRoot`. It now resolves three:
 
 | Root | Resolved from | Owns |
 |---|---|---|
-| `packageRoot` | `import.meta.url` (`lectures.mjs`) | `course-kit/assets/notes/*`, `course-kit/templates/lecture/` |
+| `packageRoot` | `import.meta.url` (`content.mjs`) | `course-kit/assets/notes/*`, `course-kit/templates/` |
 | `courseRoot` | cwd, or `--course` | `course.json`, `lectures/`, `dist/` |
-| `workspaceRoot` | nearest ancestor with `node_modules/.bin/slidev` | the Slidev binary, and `courses/` |
+| `workspaceRoot` | nearest ancestor with `node_modules/.bin/slidev` | the Slidev binary, `courses/`, and `modules/` |
 
 `selectCourses()` decides which courses a command runs against: `--course` wins
 wherever it is typed, so one course can be built from inside another; otherwise a
@@ -131,6 +157,19 @@ rather than importing it, and `@slidev/cli` therefore stays a root dependency
 while the kit's own imports — `markdown-it`, `markdown-it-anchor`,
 `@shikijs/markdown-it`, `gray-matter`, `playwright-chromium` — live in
 `course-kit/package.json`.
+
+### The shared machinery lives in `content.mjs`
+
+Lectures, modules, and courses are all named the same way, so the selector
+machinery — exact matching, ambiguity detection, and the errors that list the
+candidates — lives in `content.mjs` and each content module depends on it.
+It used to live in `lectures.mjs`, which meant `courses.mjs` imported from
+`lectures.mjs`; a third importer made that plainly wrong.
+
+Every descriptor carries a `kind` — `'lecture'`, `'module'`, or `'course'` —
+and `matchesSelector()` picks its aliases from the entry rather than from its
+`kind` argument, which is now only the noun an error message uses. That is what
+lets one list hold lectures and modules and resolve correctly over both.
 
 ### Slidev's userRoot constraint drives the layout
 
@@ -166,10 +205,11 @@ client styles would otherwise outrank a bare element selector.
 
 ### The prose pipeline
 
-`abstract.md`, `notes.md`, and `lab.md` all go through the same renderer
-(`notes.mjs`) — there is no per-type template. `buildDocument()` writes
-`<name>.html` and, unless `pdf: false`, `<name>.pdf`. Abstracts opt out: a
-paragraph-length PDF has no audience and costs a browser launch.
+`abstract.md`, `tutorial.md`, `notes.md`, and `lab.md` all go through the same
+renderer (`notes.mjs`) — there is no per-type template. `buildDocument()`
+derives the output name from the source basename, so a new document type needs
+no change there at all. Abstracts opt out of the PDF stage: a paragraph-length
+PDF has no audience and costs a browser launch.
 
 Output is deliberately **self-contained** — CSS inlined into a `<style>` element,
 images embedded as data URIs — because both an LMS page embed and an LMS file
@@ -236,6 +276,12 @@ then uploaded by hand — there is no deployment automation. Decks build with
 from whatever path the LMS serves it at without a rebuild. If a relative base
 ever stops working under an LMS, the fallback is an explicit path in
 `course.json`'s `base` rather than a code change.
+
+A module renders into each including course's `dist/modules/<id>/`, so a
+course's `dist/` stays the entire upload for that course with no sibling
+assets and no cross-upload links. A module included by two courses is rendered
+twice, once into each. That is the accepted cost of a self-contained upload;
+rendering a prose document is a second of work.
 
 Deliberately out of scope for this repo: deployment automation, and anything
 student-submission related — assignment grading, solution keys, rosters.
