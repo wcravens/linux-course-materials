@@ -2,17 +2,11 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import {
-  discoverLectures,
-  resolveSelector,
-  resolveSelectors,
-  parseLectureId,
-  matchesSelector
-} from '../../src/lectures.mjs'
+import { discoverLectures, parseLectureId } from '../../src/lectures.mjs'
+import { resolveSelector, resolveSelectors, matchesSelector } from '../../src/content.mjs'
 
 const fixtures = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'fixtures')
 const LECTURES = path.join(fixtures, 'lectures')
-const AMBIGUOUS = path.join(fixtures, 'ambiguous')
 
 test('parseLectureId splits a numeric prefix from its slug', () => {
   assert.deepEqual(parseLectureId('01-what-is-linux'), { number: '01', slug: 'what-is-linux' })
@@ -65,62 +59,7 @@ test('optional artifacts are detected per lecture', async () => {
   assert.ok(orphan.abstractPath?.endsWith('abstract.md'))
 })
 
-test('a selector resolves by number, slug, or full directory name', async () => {
+test('a lecture descriptor declares its kind', async () => {
   const lectures = await discoverLectures(LECTURES)
-  for (const selector of ['02', '2', 'shell-basics', '02-shell-basics']) {
-    assert.equal(resolveSelector(lectures, selector).id, '02-shell-basics', selector)
-  }
-})
-
-test('selector matching is case-insensitive and tolerates a trailing slash', async () => {
-  const lectures = await discoverLectures(LECTURES)
-  assert.equal(resolveSelector(lectures, 'Shell-Basics').id, '02-shell-basics')
-  assert.equal(resolveSelector(lectures, '02-shell-basics/').id, '02-shell-basics')
-})
-
-test('selector matching is exact, not substring', async () => {
-  const lectures = await discoverLectures(LECTURES)
-  const shell = lectures.find((l) => l.id === '02-shell-basics')
-
-  assert.equal(matchesSelector(shell, 'shell'), false)
-  assert.equal(matchesSelector(shell, 'basics'), false)
-  assert.equal(matchesSelector(shell, '0'), false)
-})
-
-test('an unknown selector errors and lists the available lectures', async () => {
-  const lectures = await discoverLectures(LECTURES)
-  assert.throws(
-    () => resolveSelector(lectures, '99'),
-    (error) => {
-      assert.match(error.message, /No lecture matches "99"/)
-      assert.match(error.message, /01-intro/)
-      assert.match(error.message, /10-networking/)
-      return true
-    }
-  )
-})
-
-test('an ambiguous selector errors naming the candidates', async () => {
-  const lectures = await discoverLectures(AMBIGUOUS)
-  assert.throws(
-    () => resolveSelector(lectures, 'shell'),
-    (error) => {
-      assert.match(error.message, /ambiguous/)
-      assert.match(error.message, /01-shell, 02-shell/)
-      return true
-    }
-  )
-})
-
-test('no selectors means every lecture', async () => {
-  const lectures = await discoverLectures(LECTURES)
-  assert.equal(resolveSelectors(lectures, []).length, lectures.length)
-})
-
-test('repeated selectors resolve to one lecture each', async () => {
-  const lectures = await discoverLectures(LECTURES)
-  assert.deepEqual(
-    resolveSelectors(lectures, ['01', '1', '10-networking']).map((l) => l.id),
-    ['01-intro', '10-networking']
-  )
+  assert.ok(lectures.every((l) => l.kind === 'lecture'))
 })

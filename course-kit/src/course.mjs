@@ -17,13 +17,13 @@ import { existsSync } from 'node:fs'
 import path from 'node:path'
 import {
   packageRoot,
-  discoverLectures,
   resolveSelector,
   resolveSelectors,
   entryLabel,
   formatEntryList,
   SelectorError
-} from './lectures.mjs'
+} from './content.mjs'
+import { discoverLectures } from './lectures.mjs'
 import {
   COURSES_DIRNAME,
   courseCodeLabel,

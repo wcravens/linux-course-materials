@@ -15,7 +15,7 @@
 import { readdir, readFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import path from 'node:path'
-import { packageRoot, resolveSelector, SelectorError } from './lectures.mjs'
+import { packageRoot, resolveSelector, SelectorError } from './content.mjs'
 
 /** Where courses live, relative to the workspace root. */
 export const COURSES_DIRNAME = 'courses'
@@ -92,6 +92,7 @@ export async function readCourse (dir) {
 
   return {
     id,
+    kind: 'course',
     dir,
     code,
     slug,

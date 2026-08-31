@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import path from 'node:path'
 import { existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { packageRoot, resolveSelector, matchesSelector } from '../../src/lectures.mjs'
+import { packageRoot, resolveSelector, matchesSelector } from '../../src/content.mjs'
 import {
   discoverCourses,
   findCourseRoot,

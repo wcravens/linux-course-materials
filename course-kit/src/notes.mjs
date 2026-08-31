@@ -10,7 +10,7 @@ import matter from 'gray-matter'
 import MarkdownIt from 'markdown-it'
 import anchor from 'markdown-it-anchor'
 import Shiki from '@shikijs/markdown-it'
-import { packageRoot } from './lectures.mjs'
+import { packageRoot } from './content.mjs'
 
 // The template and stylesheet travel with the tooling, not with a course, so
 // they hang off the kit's own root rather than the course being built.

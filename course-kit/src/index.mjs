@@ -5,7 +5,7 @@
 import { writeFile, mkdir } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import path from 'node:path'
-import { entryLabel } from './lectures.mjs'
+import { entryLabel } from './content.mjs'
 
 function escapeHtml (value) {
   return String(value)

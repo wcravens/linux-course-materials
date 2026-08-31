@@ -1,31 +1,17 @@
-// Lecture discovery and selector resolution.
+// Lecture discovery.
 //
-// A lecture is any directory under a course's `lectures/` holding a `slides.md`.
-// There is no manifest: the directory listing is the source of truth and titles
-// come from each deck's frontmatter.
+// A lecture is any directory under a course's `lectures/` holding a
+// `slides.md`. There is no manifest: the directory listing is the source of
+// truth and titles come from each deck's frontmatter.
 //
-// The selector machinery below is shared with course selectors (`courses.mjs`):
-// both name a target by a handful of aliases, both want exact matching, and both
-// want an error that lists the candidates. It takes a `kind` saying which is
-// being resolved, so the only difference between the two is the aliases and the
-// noun in the message.
+// The selector machinery a lecture is named by lives in `content.mjs`, shared
+// with modules and courses.
 
 import { readdir, readFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import matter from 'gray-matter'
-
-/** A selector the user typed that could not be resolved. Reported without a
-    stack trace, since the fault is in the argument, not the code. */
-export class SelectorError extends Error {}
-
-/**
- * The kit's own directory. It roots the files that travel with the tooling
- * rather than with any course — `assets/notes/` and `templates/lecture/` — and
- * so is resolved from this module's location, not from the cwd.
- */
-export const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+import { hasContent } from './content.mjs'
 
 /** Optional per-lecture artifacts, keyed by the file or directory they need. */
 const OPTIONAL_FILES = { abstract: 'abstract.md', lab: 'lab.md' }
@@ -41,32 +27,6 @@ export function parseLectureId (id) {
   return { number: match[1], slug: match[2] }
 }
 
-/** Lowercase and strip surrounding slashes so `01/` and `01` compare equal. */
-function normalize (value) {
-  return String(value).trim().replace(/^\/+|\/+$/g, '').toLowerCase()
-}
-
-/** Strip leading zeros so `1` and `01` compare equal, but `0` stays `0`. */
-function normalizeNumber (value) {
-  const stripped = normalize(value).replace(/^0+/, '')
-  return stripped === '' ? '0' : stripped
-}
-
-/** Strip hyphens so `csc118` and `csc-118` compare equal. */
-function normalizeCode (value) {
-  return normalize(value).replaceAll('-', '')
-}
-
-/**
- * True when `dir` exists and holds something other than placeholder dotfiles.
- * A scaffolded `code/.gitkeep` should not read as "this lecture has code".
- */
-async function hasContent (dir) {
-  if (!existsSync(dir)) return false
-  const entries = await readdir(dir)
-  return entries.some((name) => !name.startsWith('.'))
-}
-
 /**
  * Read one lecture directory. Returns a descriptor even when `slides.md` is
  * missing, flagged by `hasSlides`, so callers can report the problem rather
@@ -79,13 +39,15 @@ export async function readLecture (lecturesDir, id) {
 
   const lecture = {
     id,
+    kind: 'lecture',
     dir,
     number,
     slug,
     slidesPath,
     hasSlides: existsSync(slidesPath),
     title: null,
-    notesPath: null
+    notesPath: null,
+    tutorialPath: null
   }
 
   if (lecture.hasSlides) {
@@ -133,88 +95,4 @@ export async function discoverLectures (lecturesDir) {
     }
     return a.id.localeCompare(b.id)
   })
-}
-
-// --- selectors --------------------------------------------------------------
-
-/**
- * What a selector may name, per kind, and how each alias is compared: a
- * lecture's number ignores leading zeros, a course's code ignores hyphens, and
- * everything else compares as written. An alias that is null — an unnumbered
- * lecture, a course directory whose name carries no code — simply never
- * matches.
- */
-const KINDS = {
-  lecture: {
-    noun: 'lecture',
-    plural: 'lectures',
-    aliases: (lecture) => [
-      [lecture.id, normalize],
-      [lecture.slug, normalize],
-      [lecture.number, normalizeNumber]
-    ]
-  },
-  course: {
-    noun: 'course',
-    plural: 'courses',
-    aliases: (course) => [
-      [course.id, normalize],
-      [course.slug, normalize],
-      [course.code, normalizeCode]
-    ]
-  }
-}
-
-/** Human-readable label for a lecture or a course, falling back to its
-    directory name when the source carries no title. */
-export function entryLabel (entry) {
-  return entry.title ?? `${entry.id} (untitled)`
-}
-
-/** A bulleted list of what was available, for error messages. */
-export function formatEntryList (entries, kind = 'lecture') {
-  if (entries.length === 0) return `  (no ${KINDS[kind].plural} found)`
-  return entries.map((entry) => `  ${entry.id.padEnd(28)} ${entryLabel(entry)}`).join('\n')
-}
-
-/** True when `selector` names `entry` by one of its aliases — exactly. */
-export function matchesSelector (entry, selector, kind = 'lecture') {
-  return KINDS[kind].aliases(entry).some(
-    ([value, compare]) => value != null && compare(selector) === compare(value)
-  )
-}
-
-/**
- * Resolve one selector to exactly one entry. Throws on no match and on an
- * ambiguous match, naming the candidates either way.
- */
-export function resolveSelector (entries, selector, kind = 'lecture') {
-  const { noun, plural } = KINDS[kind]
-  const matches = entries.filter((entry) => matchesSelector(entry, selector, kind))
-
-  if (matches.length === 0) {
-    throw new SelectorError(
-      `No ${noun} matches "${selector}". Available ${plural}:\n${formatEntryList(entries, kind)}`
-    )
-  }
-  if (matches.length > 1) {
-    const names = matches.map((entry) => entry.id).join(', ')
-    throw new SelectorError(`Selector "${selector}" is ambiguous; it matches: ${names}`)
-  }
-  return matches[0]
-}
-
-/**
- * Resolve a list of selectors. With none given, returns every entry — which
- * is what `build`, `export`, and `notes` do when invoked bare.
- */
-export function resolveSelectors (entries, selectors, kind = 'lecture') {
-  if (selectors.length === 0) return entries
-
-  const chosen = []
-  for (const selector of selectors) {
-    const entry = resolveSelector(entries, selector, kind)
-    if (!chosen.includes(entry)) chosen.push(entry)
-  }
-  return chosen
 }
