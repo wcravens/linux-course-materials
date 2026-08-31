@@ -167,3 +167,15 @@ test('buildDocument with pdf: false writes HTML and skips the PDF', async (t) =>
   assert.ok((await stat(result.htmlPath)).size > 0)
   await assert.rejects(stat(path.join(outDir, 'sample.pdf')))
 })
+
+test('a tutorial renders through the same pipeline, named from its basename', async (t) => {
+  const outDir = await mkdtemp(path.join(os.tmpdir(), 'course-tutorial-'))
+  t.after(() => rm(outDir, { recursive: true, force: true }))
+
+  const source = path.join(fixtures, 'notes', 'tutorial.md')
+  const result = await buildDocument(source, outDir, { pdf: false })
+
+  assert.ok(result.htmlPath.endsWith('tutorial.html'))
+  assert.equal(result.title, 'A Fixture Tutorial')
+  assert.ok((await stat(result.htmlPath)).size > 0)
+})

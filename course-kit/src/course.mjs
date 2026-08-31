@@ -24,6 +24,7 @@ import {
   SelectorError
 } from './content.mjs'
 import { discoverLectures } from './lectures.mjs'
+import { discoverModules, MODULES_DIRNAME } from './modules.mjs'
 import {
   COURSES_DIRNAME,
   courseCodeLabel,
@@ -39,21 +40,27 @@ const TEMPLATE_DIR = path.join(packageRoot, 'templates', 'lecture')
 const USAGE = `Usage: course <command> [-c <course>] [selector...]
 
 Commands:
-  dev <selector>        Start the Slidev dev server for one lecture
+  dev <selector>        Start the Slidev dev server for one lecture or module
   build [selector...]   Build slides, PDFs, prose documents, and the course index
   export [selector...]  Export slide PDFs only
-  notes [selector...]   Render abstracts, notes, and lab documents only
+  notes [selector...]   Render abstracts, tutorials, notes, and lab documents
   new <NN> <title>      Scaffold a new lecture from the kit's template
-  list                  List courses and their lectures
+  new --module <slug> <title>
+                        Scaffold a new shared module under modules/
+  list                  List courses, their lectures, and their modules
 
-Lecture selectors match by number, slug, or directory name:
+Selectors match a lecture by number, slug, or directory name:
   01    what-is-linux    01-what-is-linux
+
+and a module by its directory name:
+  markdown    gcp-vm
 
 -c, --course <selector> matches by code, slug, or directory name:
   csc-118    csc118    intro-to-linux    csc-118-intro-to-linux
 
 Run from inside a course directory and that course is implied. Above one,
 build, export, notes, and list cover every course; dev and new need -c.
+Modules live at the workspace root and are included by name in a course.json.
 `
 
 class UserError extends Error {}
@@ -111,6 +118,48 @@ async function loadLectures (course) {
   return lectures
 }
 
+/**
+ * Resolve the modules a course includes, in the order its `course.json` lists
+ * them.
+ *
+ * Unlike `loadLectures`, a broken directory fails the build only when the
+ * course actually includes it. `modules/` is shared: a half-written module
+ * nobody has included yet must not break an unrelated course.
+ */
+async function loadModules (course, context) {
+  if (course.moduleSelectors.length === 0) return []
+
+  const available = await discoverModules(context.modulesDir)
+  const chosen = course.moduleSelectors.map(
+    (selector) => resolveSelector(available, selector, 'module')
+  )
+
+  const broken = chosen.filter((mod) => !mod.hasTutorial)
+  if (broken.length > 0) {
+    const names = broken.map((m) => m.id).join(', ')
+    throw new UserError(
+      `${course.id}: module directories without a tutorial.md: ${names}`
+    )
+  }
+  return chosen
+}
+
+/** Every buildable thing in a course, in the order a student meets it. */
+async function loadContent (course, context) {
+  return [...await loadLectures(course), ...await loadModules(course, context)]
+}
+
+/**
+ * Where an entry's artifacts land inside a course's `dist/`. Modules go under
+ * `modules/` so that a module id and a lecture directory name cannot collide,
+ * and so the layout matches how the index presents the two.
+ */
+function outDirFor (entry, course) {
+  return entry.kind === 'module'
+    ? path.join(course.distDir, 'modules', entry.id)
+    : path.join(course.distDir, entry.id)
+}
+
 /** `dev` and `new` act on one lecture of one course, so the course has to be
     unambiguous — from the cwd, or from `-c`. */
 function oneCourse (courses, command) {
@@ -152,68 +201,86 @@ async function cmdList (courses) {
 }
 
 async function cmdDev (course, selectors, context) {
-  const lectures = await loadLectures(course)
+  const entries = await loadContent(course, context)
   if (selectors.length !== 1) {
     throw new UserError(
-      `dev needs exactly one lecture selector. Available lectures:\n${formatEntryList(lectures)}`
+      'dev needs exactly one selector. Available lectures and modules:\n' +
+      formatEntryList(entries, 'content')
     )
   }
-  const lecture = resolveSelector(lectures, selectors[0])
-  log(`dev: ${course.id}/${lecture.id} — ${entryLabel(lecture)}`)
-  await run(context.slidev, [lecture.slidesPath, '--open'], { cwd: context.workspaceRoot })
+  const entry = resolveSelector(entries, selectors[0], 'content')
+  if (!entry.hasSlides) {
+    throw new UserError(
+      `${course.id}/${entry.id} has no slides.md, so there is no deck to serve.\n` +
+      `Render its prose instead with: npm run notes -- -c ${course.code ?? course.id} ${entry.id}`
+    )
+  }
+  log(`dev: ${course.id}/${entry.id} — ${entryLabel(entry)}`)
+  await run(context.slidev, [entry.slidesPath, '--open'], { cwd: context.workspaceRoot })
 }
 
-async function buildSlides (lecture, course, context) {
-  const outDir = path.join(course.distDir, lecture.id, 'slides')
+async function buildSlides (entry, course, context) {
+  if (!entry.hasSlides) return
+  const outDir = path.join(outDirFor(entry, course), 'slides')
   // `--out` resolves against the deck's own directory, so it must be absolute.
   // Hash routing plus a relative base lets the SPA work from whatever path the
   // LMS serves it at, without a rebuild.
   await run(context.slidev, [
-    'build', lecture.slidesPath,
+    'build', entry.slidesPath,
     '--out', outDir,
     '--base', course.base,
     '--router-mode', 'hash'
   ], { cwd: context.workspaceRoot })
 }
 
-async function exportSlides (lecture, course, context) {
-  const outPath = path.join(course.distDir, lecture.id, 'slides.pdf')
+async function exportSlides (entry, course, context) {
+  if (!entry.hasSlides) return
+  const outPath = path.join(outDirFor(entry, course), 'slides.pdf')
   await mkdir(path.dirname(outPath), { recursive: true })
-  await run(context.slidev, ['export', lecture.slidesPath, '--output', outPath], {
+  await run(context.slidev, ['export', entry.slidesPath, '--output', outPath], {
     cwd: context.workspaceRoot
   })
 }
 
 /**
- * Render every prose document a lecture has through the same pipeline.
- * The abstract is HTML only — it is an LMS module blurb, not a handout.
+ * Render every prose document an entry has through the same pipeline.
+ *
+ * One ordered list serves both kinds. A lecture's `tutorialPath` is always null
+ * and a prose-only module's `notesPath` and `labPath` usually are, so the
+ * filter does all the work no branching on kind otherwise would.
+ *
+ * The abstract is HTML only — it is a course-page blurb, not a handout, and a
+ * paragraph-length PDF has no audience and costs a browser launch.
  */
-async function buildProse (lecture, course) {
-  const outDir = path.join(course.distDir, lecture.id)
+async function buildProse (entry, course) {
+  const outDir = outDirFor(entry, course)
   const documents = [
-    { source: lecture.abstractPath, pdf: false },
-    { source: lecture.notesPath, pdf: true },
-    { source: lecture.labPath, pdf: true }
+    { source: entry.abstractPath, pdf: false },
+    { source: entry.tutorialPath, pdf: true },
+    { source: entry.notesPath, pdf: true },
+    { source: entry.labPath, pdf: true }
   ].filter((doc) => doc.source)
 
   if (documents.length === 0) {
-    process.stderr.write(`  ! ${course.id}/${lecture.id}: no abstract.md, notes.md, or lab.md\n`)
+    process.stderr.write(
+      `  ! ${course.id}/${entry.id}: no abstract.md, tutorial.md, notes.md, or lab.md\n`
+    )
     return
   }
   for (const { source, pdf } of documents) {
     await buildDocument(source, outDir, {
       pdf,
-      publicDir: lecture.publicDir,
-      warn: warnFor(course, lecture)
+      publicDir: entry.publicDir,
+      warn: warnFor(course, entry)
     })
   }
 }
 
-async function copyCode (lecture, course) {
-  if (!lecture.codeDir) return
-  const entries = (await readdir(lecture.codeDir)).filter((name) => !name.startsWith('.'))
+async function copyCode (entry, course) {
+  if (!entry.codeDir) return
+  const entries = (await readdir(entry.codeDir)).filter((name) => !name.startsWith('.'))
   if (entries.length === 0) return
-  await cp(lecture.codeDir, path.join(course.distDir, lecture.id, 'code'), {
+  await cp(entry.codeDir, path.join(outDirFor(entry, course), 'code'), {
     recursive: true,
     filter: (source) => !path.basename(source).startsWith('.')
   })
@@ -221,32 +288,33 @@ async function copyCode (lecture, course) {
 
 async function cmdBuild (course, selectors, context) {
   const lectures = await loadLectures(course)
-  for (const lecture of resolveSelectors(lectures, selectors)) {
-    log(`\nbuild: ${course.id}/${lecture.id} — ${entryLabel(lecture)}`)
+  const modules = await loadModules(course, context)
+
+  for (const entry of resolveSelectors([...lectures, ...modules], selectors, 'content')) {
+    log(`\nbuild: ${course.id}/${entry.id} — ${entryLabel(entry)}`)
     // One deck at a time: every entry file is named slides.md, and Slidev's
     // multi-entry output paths derive from the entry basename, so they collide.
-    await buildSlides(lecture, course, context)
-    await exportSlides(lecture, course, context)
-    await buildProse(lecture, course)
-    await copyCode(lecture, course)
+    await buildSlides(entry, course, context)
+    await exportSlides(entry, course, context)
+    await buildProse(entry, course)
+    await copyCode(entry, course)
   }
-  const indexPath = await writeIndex(lectures, course)
+  const indexPath = await writeIndex(lectures, modules, course)
   log(`\nwrote ${path.relative(context.workspaceRoot, indexPath)}`)
 }
 
 async function cmdExport (course, selectors, context) {
-  const lectures = await loadLectures(course)
-  for (const lecture of resolveSelectors(lectures, selectors)) {
-    log(`\nexport: ${course.id}/${lecture.id}`)
-    await exportSlides(lecture, course, context)
+  for (const entry of resolveSelectors(await loadContent(course, context), selectors, 'content')) {
+    if (!entry.hasSlides) continue
+    log(`\nexport: ${course.id}/${entry.id}`)
+    await exportSlides(entry, course, context)
   }
 }
 
-async function cmdNotes (course, selectors) {
-  const lectures = await loadLectures(course)
-  for (const lecture of resolveSelectors(lectures, selectors)) {
-    log(`\nnotes: ${course.id}/${lecture.id}`)
-    await buildProse(lecture, course)
+async function cmdNotes (course, selectors, context) {
+  for (const entry of resolveSelectors(await loadContent(course, context), selectors, 'content')) {
+    log(`\nnotes: ${course.id}/${entry.id}`)
+    await buildProse(entry, course)
   }
 }
 
@@ -327,7 +395,11 @@ async function main (argv) {
       'Run npm install at the workspace root first.'
     )
   }
-  const context = { workspaceRoot, slidev: slidevBin(workspaceRoot) }
+  const context = {
+    workspaceRoot,
+    slidev: slidevBin(workspaceRoot),
+    modulesDir: path.join(workspaceRoot, MODULES_DIRNAME)
+  }
   const courses = await selectCourses(path.join(workspaceRoot, COURSES_DIRNAME), courseSelector)
 
   if (command === 'list') return cmdList(courses)
