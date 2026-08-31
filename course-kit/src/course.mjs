@@ -35,7 +35,8 @@ import {
 import { buildDocument } from './notes.mjs'
 import { writeIndex } from './index.mjs'
 
-const TEMPLATE_DIR = path.join(packageRoot, 'templates', 'lecture')
+const LECTURE_TEMPLATE_DIR = path.join(packageRoot, 'templates', 'lecture')
+const MODULE_TEMPLATE_DIR = path.join(packageRoot, 'templates', 'module')
 
 const USAGE = `Usage: course <command> [-c <course>] [selector...]
 
@@ -105,6 +106,13 @@ export function extractCourseFlag (args) {
     }
   }
   return { course, args: rest }
+}
+
+/** Pull a bare `--module` / `-m` switch out of the argument list. Unlike
+    `--course` it takes no value: it selects which kind of thing `new` makes. */
+export function extractModuleFlag (args) {
+  const rest = args.filter((arg) => arg !== '--module' && arg !== '-m')
+  return { isModule: rest.length !== args.length, args: rest }
 }
 
 /** Discover a course's lectures, failing loudly on a directory with no `slides.md`. */
@@ -344,11 +352,11 @@ async function cmdNew (course, args) {
   if (existsSync(dir)) {
     throw new UserError(`${path.relative(course.dir, dir)} already exists; refusing to overwrite`)
   }
-  if (!existsSync(TEMPLATE_DIR)) {
-    throw new UserError(`Missing scaffold source at ${TEMPLATE_DIR}`)
+  if (!existsSync(LECTURE_TEMPLATE_DIR)) {
+    throw new UserError(`Missing scaffold source at ${LECTURE_TEMPLATE_DIR}`)
   }
 
-  await cp(TEMPLATE_DIR, dir, { recursive: true })
+  await cp(LECTURE_TEMPLATE_DIR, dir, { recursive: true })
 
   // The template is shared by every course, so the course names itself here
   // rather than being written into the scaffold source.
@@ -372,11 +380,58 @@ async function cmdNew (course, args) {
   log(`Start editing with: npm run dev -- -c ${course.code ?? course.id} ${number}`)
 }
 
+/**
+ * Scaffold a shared module. It takes no course, and its slug is given
+ * explicitly rather than derived from the title: the slug is the stable name
+ * every including `course.json` references, so it must not churn when the
+ * title is reworded.
+ */
+async function cmdNewModule (args, context) {
+  const [slug, ...titleParts] = args
+  const title = titleParts.join(' ').trim()
+
+  if (!slug || !title) {
+    throw new UserError('Usage: npm run new -- --module <slug> "<Module Title>"')
+  }
+  if (slug !== slugify(slug)) {
+    throw new UserError(
+      `Module slug must be lowercase words joined by hyphens, got "${slug}".\n` +
+      `Did you mean "${slugify(slug)}"?`
+    )
+  }
+
+  const dir = path.join(context.modulesDir, slug)
+  if (existsSync(dir)) {
+    throw new UserError(
+      `${path.relative(context.workspaceRoot, dir)} already exists; refusing to overwrite`
+    )
+  }
+  if (!existsSync(MODULE_TEMPLATE_DIR)) {
+    throw new UserError(`Missing scaffold source at ${MODULE_TEMPLATE_DIR}`)
+  }
+
+  await cp(MODULE_TEMPLATE_DIR, dir, { recursive: true })
+
+  for (const file of ['tutorial.md', 'abstract.md']) {
+    const filePath = path.join(dir, file)
+    if (!existsSync(filePath)) continue
+    const text = await readFile(filePath, 'utf8')
+    await writeFile(filePath, text.replaceAll('{{TITLE}}', () => title), 'utf8')
+  }
+
+  log(`Created ${MODULES_DIRNAME}/${slug}/`)
+  log('')
+  log('A module belongs to no course until one includes it. Add it to a')
+  log('course.json to have it built:')
+  log('')
+  log(`  "modules": ["${slug}"]`)
+}
+
 // --- entry point ------------------------------------------------------------
 
 /** Commands that act on one course at a time versus all the selected ones. */
 const PER_COURSE = { build: cmdBuild, export: cmdExport, notes: cmdNotes }
-const SINGLE_COURSE = { dev: cmdDev, new: cmdNew }
+const SINGLE_COURSE = { dev: cmdDev }
 
 async function main (argv) {
   const [command, ...rest] = argv
@@ -404,6 +459,11 @@ async function main (argv) {
 
   if (command === 'list') return cmdList(courses)
 
+  if (command === 'new') {
+    const { isModule, args: newArgs } = extractModuleFlag(args)
+    if (isModule) return cmdNewModule(newArgs, context)
+    return cmdNew(oneCourse(courses, 'new'), newArgs, context)
+  }
   if (command in SINGLE_COURSE) {
     return SINGLE_COURSE[command](oneCourse(courses, command), args, context)
   }

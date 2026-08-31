@@ -172,3 +172,22 @@ test('a course declares its kind', async () => {
   const course = await readCourse(INTRO)
   assert.equal(course.kind, 'course')
 })
+
+test('the kit carries a module template alongside its lecture template', () => {
+  for (const asset of [
+    ['templates', 'module', 'tutorial.md'],
+    ['templates', 'module', 'abstract.md']
+  ]) {
+    assert.ok(existsSync(path.join(packageRoot, ...asset)), asset.join('/'))
+  }
+})
+
+test('the module template names no course, because a module belongs to none', async () => {
+  const { readFile } = await import('node:fs/promises')
+  const tutorial = await readFile(path.join(packageRoot, 'templates', 'module', 'tutorial.md'), 'utf8')
+
+  assert.match(tutorial, /\{\{TITLE\}\}/)
+  assert.doesNotMatch(tutorial, /\{\{COURSE\}\}/)
+  assert.doesNotMatch(tutorial, /\{\{COURSE_TITLE\}\}/)
+  assert.doesNotMatch(tutorial, /\{\{NUMBER\}\}/)
+})
