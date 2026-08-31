@@ -17,7 +17,10 @@ function escapeHtml (value) {
 
 /** Artifact links, in the order they should be offered to a student. A
     module's tutorial is its primary document, so it sits directly after the
-    abstract; one list serves both kinds, since it filters by what exists. */
+    abstract; one list serves both kinds, since it filters by what exists.
+
+    A lecture never contributes `abstract.html` — the abstract belongs to the
+    course and is linked from the header — but a module still can. */
 const ARTIFACTS = [
   { file: 'abstract.html', label: 'Abstract' },
   { file: 'tutorial.html', label: 'Tutorial' },
@@ -90,6 +93,8 @@ const STYLES = `
   main { max-width: 46rem; margin: 0 auto; padding: 3rem 1.5rem 5rem; }
   header { border-bottom: 1px solid var(--rule); padding-bottom: 1.25rem; margin-bottom: 2rem; }
   h1 { margin: 0; font-size: 1.9rem; }
+  p.course-abstract { margin: 0.55rem 0 0; font-size: 0.9rem; }
+  p.course-abstract a { color: var(--accent); text-decoration: none; }
   h2.section {
     margin: 2.25rem 0 0.5rem;
     font-size: 0.78rem;
@@ -144,6 +149,12 @@ export async function writeIndex (lectures, modules, course) {
     renderSection('Modules', modules, distDir)
   ].filter(Boolean).join('\n')
 
+  // The course abstract describes the whole course, so it belongs in the
+  // header rather than in either section's list of entries.
+  const abstract = existsSync(path.join(distDir, 'abstract.html'))
+    ? '\n    <p class="course-abstract"><a href="./abstract.html">Course abstract</a></p>'
+    : ''
+
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -155,7 +166,7 @@ export async function writeIndex (lectures, modules, course) {
 <body>
 <main>
   <header>
-    <h1>${escapeHtml(title)}</h1>
+    <h1>${escapeHtml(title)}</h1>${abstract}
   </header>
 ${sections}
 </main>

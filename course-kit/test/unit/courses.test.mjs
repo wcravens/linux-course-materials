@@ -168,6 +168,17 @@ test('a malformed modules key is ignored rather than crashed on', async () => {
   assert.deepEqual(course.moduleSelectors, [])
 })
 
+test('a course finds an abstract.md beside its course.json', async () => {
+  const course = await readCourse(INTRO)
+  assert.ok(course.abstractPath?.endsWith('abstract.md'))
+  assert.equal(path.dirname(course.abstractPath), INTRO)
+})
+
+test('a course without an abstract.md reports null', async () => {
+  const course = await readCourse(path.join(COURSES, 'csc-171-linux-administration'))
+  assert.equal(course.abstractPath, null)
+})
+
 test('a course declares its kind', async () => {
   const course = await readCourse(INTRO)
   assert.equal(course.kind, 'course')
@@ -180,6 +191,10 @@ test('the kit carries a module template alongside its lecture template', () => {
   ]) {
     assert.ok(existsSync(path.join(packageRoot, ...asset)), asset.join('/'))
   }
+})
+
+test('the lecture template ships no abstract, because a course owns that', () => {
+  assert.ok(!existsSync(path.join(packageRoot, 'templates', 'lecture', 'abstract.md')))
 })
 
 test('the module template names no course, because a module belongs to none', async () => {

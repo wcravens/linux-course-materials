@@ -22,7 +22,7 @@ test('build produces every artifact for lecture 01', { timeout: 600_000 }, async
   // Run from inside the course, which is also how the cwd walk-up finds it.
   await run('node', [BIN, 'build', '01'], { cwd: COURSE })
 
-  for (const artifact of ['slides/index.html', 'slides.pdf', 'abstract.html', 'notes.html', 'notes.pdf']) {
+  for (const artifact of ['slides/index.html', 'slides.pdf', 'notes.html', 'notes.pdf']) {
     await t.test(`${artifact} exists and is non-empty`, async () => {
       const info = await stat(path.join(DIST, artifact))
       assert.ok(info.isFile(), `${artifact} should be a file`)
@@ -49,8 +49,19 @@ test('build produces every artifact for lecture 01', { timeout: 600_000 }, async
     assert.match(html, new RegExp(`\\./${LECTURE}/notes\\.pdf`))
   })
 
-  await t.test('the abstract is HTML only', async () => {
-    await assert.rejects(stat(path.join(DIST, 'abstract.pdf')))
+  await t.test('the abstract is the course\'s, not the lecture\'s', async () => {
+    await assert.rejects(stat(path.join(DIST, 'abstract.html')))
+    const info = await stat(path.join(COURSE, 'dist', 'abstract.html'))
+    assert.ok(info.isFile() && info.size > 0)
+  })
+
+  await t.test('the course abstract is HTML only', async () => {
+    await assert.rejects(stat(path.join(COURSE, 'dist', 'abstract.pdf')))
+  })
+
+  await t.test('the course index links the course abstract from its header', async () => {
+    const html = await readFile(path.join(COURSE, 'dist', 'index.html'), 'utf8')
+    assert.match(html, /<p class="course-abstract"><a href="\.\/abstract\.html">/)
   })
 
   await t.test('both PDFs are real PDFs', async () => {

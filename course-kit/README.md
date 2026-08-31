@@ -129,8 +129,8 @@ builds collide.
    at without a rebuild. Skipped for a module with no `slides.md` — a module
    needs no deck.
 2. `slidev export` for `slides.pdf`, same skip.
-3. `buildProse()` for whichever of `abstract.md`, `tutorial.md`, `notes.md`,
-   and `lab.md` the entry has.
+3. `buildProse()` for whichever of `tutorial.md`, `notes.md`, and `lab.md` the
+   entry has — plus `abstract.md` for a module, which owns one.
 4. `copyCode()` for `code/`, dotfiles excluded.
 
 A lecture's artifacts land in `dist/<id>/`; a module's land in
@@ -138,14 +138,21 @@ A lecture's artifacts land in `dist/<id>/`; a module's land in
 directory name. A module included by more than one course is built once per
 including course, straight into that course's own `dist/`.
 
+`buildCourseAbstract()` then renders the course's own `abstract.md`, if it has
+one, to `dist/abstract.html`. It takes a course rather than an entry and sits
+outside the per-entry loop, because the abstract describes the course as a
+whole rather than any one lecture. HTML only, like a module's abstract.
+
 Then `writeIndex()` writes `dist/index.html` for the course — lectures, then
 the modules it includes — linking only the artifacts that actually exist on
-disk.
+disk, with the course abstract linked from the header rather than from either
+section.
 
 ## The prose pipeline
 
 `abstract.md`, `tutorial.md`, `notes.md`, and `lab.md` all go through
-`buildDocument()` — there is no per-type template. It derives the output name
+`buildDocument()` — there is no per-type template, and no distinction between a
+document a course owns and one an entry owns beyond the output directory. It derives the output name
 from the source basename and writes `<name>.html` and, unless `pdf: false`,
 `<name>.pdf`. Abstracts opt out: a paragraph-length PDF has no audience and
 costs a browser launch.
@@ -201,7 +208,7 @@ revisiting only if a document becomes image-heavy.
 `lectures.mjs`:
 
 ```js
-const OPTIONAL_FILES = { abstract: 'abstract.md', lab: 'lab.md' }
+const OPTIONAL_FILES = { lab: 'lab.md' }
 const OPTIONAL_DIRS = { code: 'code', public: 'public' }
 ```
 
@@ -212,6 +219,12 @@ Directories go through `hasContent()`, which ignores dotfiles, so a scaffolded
 the parallel maps for a module (`notes` and `lab` alongside `abstract`, since a
 module also has no numbering scheme to keep separate).
 
+**A course-level document** is a different shape: it hangs off `readCourse()`
+in `courses.mjs` rather than either map, and needs its own render step beside
+`buildCourseAbstract()`. `abstract.md` is the only one today. Reach for this
+only when the document genuinely describes the course rather than a meeting of
+it — otherwise it belongs in the per-entry maps above.
+
 **A new command** is a function plus an entry in `PER_COURSE` (runs once per
 selected course) or `SINGLE_COURSE` (needs exactly one). Throw `UserError` for
 anything the user typed wrong: it prints as a bare message instead of a stack
@@ -220,7 +233,8 @@ trace.
 **The lecture template** scaffolds a lecture for *any* course, so it names none
 itself. `cmdNew()` substitutes `{{TITLE}}`, `{{NUMBER}}`, `{{COURSE}}` (the code
 as prose — `csc-118` becomes `CSC 118`), and `{{COURSE_TITLE}}` into
-`slides.md`, `abstract.md`, and `notes.md`.
+`slides.md` and `notes.md`. It ships no `abstract.md`, because a lecture has
+no abstract to scaffold.
 
 **The module template** scaffolds a module the same way, but takes no course
 and no number: `cmdNewModule()` substitutes only `{{TITLE}}` into `tutorial.md`

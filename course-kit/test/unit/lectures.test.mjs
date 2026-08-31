@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import path from 'node:path'
+import { existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { discoverLectures, parseLectureId } from '../../src/lectures.mjs'
 
@@ -51,11 +52,20 @@ test('optional artifacts are detected per lecture', async () => {
   const orphan = lectures.find((l) => l.id === 'notes-only')
 
   assert.equal(intro.notesPath, null)
-  assert.equal(intro.abstractPath, null)
   assert.equal(intro.labPath, null)
   assert.equal(intro.codeDir, null)
   assert.ok(orphan.notesPath?.endsWith('notes.md'))
-  assert.ok(orphan.abstractPath?.endsWith('abstract.md'))
+})
+
+test('a lecture does not pick up an abstract, even holding one', async () => {
+  // notes-only/ still contains an abstract.md. An abstract describes the
+  // course as a whole, so a lecture must not claim one: the file on disk is
+  // what makes this assertion mean something.
+  const lectures = await discoverLectures(LECTURES)
+  const orphan = lectures.find((l) => l.id === 'notes-only')
+
+  assert.ok(existsSync(path.join(orphan.dir, 'abstract.md')))
+  assert.ok(!('abstractPath' in orphan))
 })
 
 test('a lecture descriptor declares its kind', async () => {

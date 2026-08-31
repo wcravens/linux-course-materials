@@ -307,9 +307,12 @@ async function buildProse (entry, course) {
   ].filter((doc) => doc.source)
 
   if (documents.length === 0) {
-    process.stderr.write(
-      `  ! ${course.id}/${entry.id}: no abstract.md, tutorial.md, notes.md, or lab.md\n`
-    )
+    // A lecture's abstract is not in this list: the abstract belongs to the
+    // course, so naming it here would send the reader to the wrong directory.
+    const expected = entry.kind === 'module'
+      ? 'abstract.md, tutorial.md, notes.md, or lab.md'
+      : 'notes.md or lab.md'
+    process.stderr.write(`  ! ${course.id}/${entry.id}: no ${expected}\n`)
     return
   }
   for (const { source, pdf } of documents) {
@@ -319,6 +322,23 @@ async function buildProse (entry, course) {
       warn: warnFor(course, entry)
     })
   }
+}
+
+/**
+ * Render the course's own `abstract.md` into the root of its `dist/`.
+ *
+ * A course owns exactly one prose document, and it is not tied to any lecture,
+ * so this sits apart from `buildProse()` and takes a course rather than an
+ * entry. HTML only, for the reason an entry's abstract skips the PDF stage: a
+ * paragraph-length PDF has no audience and costs a browser launch.
+ */
+async function buildCourseAbstract (course) {
+  if (!course.abstractPath) return
+  log(`\nabstract: ${course.id}`)
+  await buildDocument(course.abstractPath, course.distDir, {
+    pdf: false,
+    warn: (message) => process.stderr.write(`  ! ${course.id}: ${message}\n`)
+  })
 }
 
 async function copyCode (entry, course) {
@@ -344,6 +364,7 @@ async function cmdBuild (course, selectors, context) {
     await buildProse(entry, course)
     await copyCode(entry, course)
   }
+  await buildCourseAbstract(course)
   const indexPath = await writeIndex(lectures, modules, course)
   log(`\nwrote ${path.relative(context.workspaceRoot, indexPath)}`)
 }
@@ -357,6 +378,7 @@ async function cmdExport (course, selectors, context) {
 }
 
 async function cmdNotes (course, selectors, context) {
+  await buildCourseAbstract(course)
   for (const entry of resolveSelectors(await loadContent(course, context), selectors, 'content')) {
     log(`\nnotes: ${course.id}/${entry.id}`)
     await buildProse(entry, course)
@@ -403,7 +425,7 @@ async function cmdNew (course, args) {
     '{{COURSE}}': courseCodeLabel(course),
     '{{COURSE_TITLE}}': entryLabel(course)
   }
-  for (const file of ['slides.md', 'abstract.md', 'notes.md']) {
+  for (const file of ['slides.md', 'notes.md']) {
     const filePath = path.join(dir, file)
     if (!existsSync(filePath)) continue
     let text = await readFile(filePath, 'utf8')

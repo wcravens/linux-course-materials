@@ -103,8 +103,9 @@ npm run new -- -c csc-118 02 "Filesystem Basics"
 
 This copies `course-kit/templates/lecture/` to the course's
 `lectures/02-filesystem-basics/`, substituting the lecture number and title and
-the course's own name into the `slides.md`, `abstract.md`, and `notes.md`
-frontmatter. It refuses to overwrite an existing directory. There is no manifest
+the course's own name into the `slides.md` and `notes.md` frontmatter. It
+scaffolds no `abstract.md`: an abstract describes the course as a whole and
+lives at the course root, not in a lecture. It refuses to overwrite an existing directory. There is no manifest
 to update: the runner discovers lectures by listing `lectures/*/` and reads each
 title from the deck's frontmatter.
 
@@ -164,10 +165,10 @@ course as currently taught, edited in place each semester.
 courses/
 └── csc-118-intro-to-linux/
     ├── course.json          # course title, deploy base, and included modules
+    ├── abstract.md          # short summary of the course, for the LMS
     ├── lectures/
     │   └── 01-what-is-linux/
     │       ├── slides.md    # Slidev deck
-    │       ├── abstract.md  # short summary for the LMS course page
     │       ├── notes.md     # prose notes
     │       ├── lab.md       # optional; built only when present
     │       ├── public/      # images, shared by slides and notes
@@ -176,7 +177,7 @@ courses/
 modules/                     # shared tutorial material, belonging to no course
 └── markdown/
     ├── tutorial.md          # the module's primary document
-    ├── abstract.md          # short summary for the LMS course page
+    ├── abstract.md          # the module's own summary; a module owns one
     └── public/
 course-kit/                  # the build tooling, as a workspace package
 ├── bin/course.mjs           # the `course` command
@@ -205,10 +206,10 @@ that same directory, so `![Diagram](/diagram.png)` works identically in
 ```
 courses/csc-118-intro-to-linux/dist/
 ├── index.html                       # course index, links to every artifact
+├── abstract.html                    # the course abstract; HTML only, no PDF
 ├── 01-what-is-linux/
 │   ├── slides/                      # Slidev SPA, iframe-embeddable
 │   ├── slides.pdf
-│   ├── abstract.html                # HTML only; no PDF
 │   ├── notes.html
 │   ├── notes.pdf
 │   └── code/
@@ -325,12 +326,18 @@ above each table already introduces it. A table without one still builds, but
 the run reports it.
 
 `abstract.md` is a short summary — around 200 words — meant to be pasted or
-embedded as the LMS course page for the lecture or module it belongs to. It
-renders to HTML only; a PDF of a paragraph has no audience, so that stage is
-skipped. `tutorial.md`, `notes.md`, and `lab.md` each produce both HTML and PDF.
+embedded as an LMS page. It renders to HTML only; a PDF of a paragraph has no
+audience, so that stage is skipped. `tutorial.md`, `notes.md`, and `lab.md`
+each produce both HTML and PDF.
+
+**An abstract belongs to a course, not to a lecture.** It sits beside
+`course.json` at the course root, describes the course as a whole, and renders
+to the root of that course's `dist/`, linked from the top of the course index.
+A lecture has no abstract of its own. A module still does, because a module is
+a unit in its own right that any number of courses may include.
 
 All four files are optional in the sense that the build skips what is absent,
-but a lecture with none of them is reported as a warning. A module a course
+but a lecture with neither `notes.md` nor `lab.md` is reported as a warning. A module a course
 includes that has no `tutorial.md` is not tolerated the same way: the command
 stops with an error naming the offending module.
 

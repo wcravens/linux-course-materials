@@ -13,8 +13,11 @@ import path from 'node:path'
 import matter from 'gray-matter'
 import { hasContent } from './content.mjs'
 
-/** Optional per-lecture artifacts, keyed by the file or directory they need. */
-const OPTIONAL_FILES = { abstract: 'abstract.md', lab: 'lab.md' }
+/** Optional per-lecture artifacts, keyed by the file or directory they need.
+    No `abstract` here: an abstract describes the course as a whole and lives
+    at the course root, discovered by `courses.mjs`. A module still has one,
+    because a module is a unit in its own right rather than part of a course. */
+const OPTIONAL_FILES = { lab: 'lab.md' }
 const OPTIONAL_DIRS = { code: 'code', public: 'public' }
 
 /**

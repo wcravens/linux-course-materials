@@ -6,6 +6,11 @@
 // directory. `course.json` holds `{ title, base, modules }` — the last being
 // the shared modules this course includes, by name.
 //
+// A course may also hold an `abstract.md` beside its `course.json`. The
+// abstract describes the course as a whole, so it lives at the course root
+// rather than in any one lecture — it is the only prose document a course
+// owns directly.
+//
 // Three roots replace the single repository root the tooling used when it
 // served one course:
 //
@@ -91,6 +96,7 @@ export async function readCourse (dir) {
   const config = JSON.parse(await readFile(configPath, 'utf8'))
   const id = path.basename(dir)
   const { code, slug } = parseCourseId(id)
+  const abstractPath = path.join(dir, 'abstract.md')
 
   return {
     id,
@@ -106,6 +112,10 @@ export async function readCourse (dir) {
     moduleSelectors: Array.isArray(config.modules)
       ? config.modules.filter((entry) => typeof entry === 'string')
       : [],
+    // The one prose document a course owns: a blurb for the LMS course page,
+    // describing the course rather than any single meeting of it. Null when
+    // absent, matching how a lecture and a module report their optionals.
+    abstractPath: existsSync(abstractPath) ? abstractPath : null,
     lecturesDir: path.join(dir, 'lectures'),
     distDir: path.join(dir, 'dist')
   }
