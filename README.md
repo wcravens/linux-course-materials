@@ -330,8 +330,9 @@ renders to HTML only; a PDF of a paragraph has no audience, so that stage is
 skipped. `tutorial.md`, `notes.md`, and `lab.md` each produce both HTML and PDF.
 
 All four files are optional in the sense that the build skips what is absent,
-but a lecture with none of them is reported as a warning — as is a module a
-course includes that has no `tutorial.md`.
+but a lecture with none of them is reported as a warning. A module a course
+includes that has no `tutorial.md` is not tolerated the same way: the command
+stops with an error naming the offending module.
 
 ## Tests
 

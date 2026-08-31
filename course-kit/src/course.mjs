@@ -46,7 +46,7 @@ Commands:
   export [selector...]  Export slide PDFs only
   notes [selector...]   Render abstracts, tutorials, notes, and lab documents
   new <NN> <title>      Scaffold a new lecture from the kit's template
-  new --module <slug> <title>
+  new --module <slug> <title>  (-m)
                         Scaffold a new shared module under modules/
   list                  List courses, their lectures, and their modules
 
@@ -180,8 +180,8 @@ function oneCourse (courses, command) {
   return courses[0]
 }
 
-function warnFor (course, lecture) {
-  return (message) => process.stderr.write(`  ! ${course.id}/${lecture.id}: ${message}\n`)
+function warnFor (course, entry) {
+  return (message) => process.stderr.write(`  ! ${course.id}/${entry.id}: ${message}\n`)
 }
 
 // --- commands ---------------------------------------------------------------

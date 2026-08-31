@@ -121,7 +121,7 @@ the renderer will highlight it.
 ```bash
 sudo apt update
 sudo apt install pandoc
-pandoc notes.md -o notes.pdf
+pandoc notes.md -o notes.html
 ```
 ````
 
@@ -130,7 +130,7 @@ Which renders as:
 ```bash
 sudo apt update
 sudo apt install pandoc
-pandoc notes.md -o notes.pdf
+pandoc notes.md -o notes.html
 ```
 
 Notice the outer fence in the example above uses four backticks. A fence ends

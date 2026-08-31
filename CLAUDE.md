@@ -34,7 +34,7 @@ npm run export                       # slide PDFs only
 npm run notes                        # prose documents only (fast; no Slidev)
 npm run new   -- -c csc-118 02 "Title"
 npm run new   -- --module markdown "Writing Markdown"   # a shared module
-npm run list                         # every course with its lectures nested
+npm run list                         # every course with its lectures and modules nested; a bare invocation also prints a workspace-wide module block
 npm test                             # unit tests (fast, fixture-based)
 npm run test:e2e                     # real build of CSC 118 lecture 01; launches a browser
 ```
@@ -121,19 +121,31 @@ about that.
 currently taught and is edited in place each semester, because rebuilding a
 past term's artifacts is not a use case.
 
-Per-lecture optional artifacts are declared by two maps at the top of
-`lectures.mjs`:
+Per-entry optional artifacts are declared by two maps, at the top of
+`lectures.mjs` for a lecture and, separately, at the top of `modules.mjs` for a
+module:
 
 ```js
+// lectures.mjs
 const OPTIONAL_FILES = { abstract: 'abstract.md', lab: 'lab.md' }
+const OPTIONAL_DIRS = { code: 'code', public: 'public' }
+
+// modules.mjs
+const OPTIONAL_FILES = { abstract: 'abstract.md', notes: 'notes.md', lab: 'lab.md' }
 const OPTIONAL_DIRS = { code: 'code', public: 'public' }
 ```
 
-A key becomes `lecture.<key>Path` / `lecture.<key>Dir`, null when absent. **To add
-a new per-lecture document type, add it here** — then wire it into `buildProse()`
-in `course.mjs` and `ARTIFACTS` in `index.mjs`. Directories go through
-`hasContent()`, which ignores dotfiles, so a scaffolded `code/.gitkeep` does not
-count as "this lecture has code".
+A key becomes `<entry>.<key>Path` / `<entry>.<key>Dir`, null when absent.
+Directories go through `hasContent()`, which ignores dotfiles, so a scaffolded
+`code/.gitkeep` does not count as "this entry has code".
+
+These two maps are declared separately and deliberately differ: a lecture's
+required document is `slides.md`, and `notesPath` is computed apart from its
+`OPTIONAL_FILES`; a module's required document is `tutorial.md` instead, and
+`notes` lives inside its `OPTIONAL_FILES` map. **To add a new per-entry document
+type, both maps must be touched** — updating only `lectures.mjs` leaves modules
+without it, silently — plus `buildProse()` in `course.mjs` and `ARTIFACTS` in
+`index.mjs`. Do not try to unify the two maps; the divergence is intentional.
 
 ### Three roots
 

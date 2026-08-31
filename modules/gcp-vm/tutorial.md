@@ -264,7 +264,7 @@ runnable file, so you can compare your typing against a known good version. Run
 it with your project ID as its only argument:
 
 ```bash
-./create-vm.sh <your-project-id>
+bash create-vm.sh <your-project-id>
 ```
 
 It sets the project, creates the same `linux-lab` instance described above, and

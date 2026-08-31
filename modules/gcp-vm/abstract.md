@@ -13,8 +13,8 @@ what Google Cloud does with your keys on your behalf, and a short tour of the
 running machine to confirm what you landed on.
 
 You will need a Google account and a browser; nothing is installed on your own
-computer. The instance is deliberately tiny and falls within Google's free
-tier allowances, but those terms change and anything beyond them is billed.
+computer. The instance is deliberately tiny and, run for a short session, cheap
+rather than free.
 
 Delete your instance when you are finished. A running virtual machine costs
 money for every second it runs, and even a stopped one keeps billing for its
