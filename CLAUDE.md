@@ -117,6 +117,18 @@ means none. Resolution happens in `course.mjs` rather than `courses.mjs`,
 because `modules/` hangs off the workspace root and a course does not know
 about that.
 
+**`abstract.md` belongs to a course, not to a lecture.** It sits beside
+`course.json` at the course root and describes the course as a whole — the
+blurb an LMS shows on its course page. `readCourse()` picks it up as
+`course.abstractPath`, `buildCourseAbstract()` in `course.mjs` renders it to
+`dist/abstract.html`, and `writeIndex()` links it from the index header rather
+than from any entry's artifact list. It is the only prose document a course
+owns directly, and the only one that is not a per-entry artifact.
+
+A lecture therefore has no abstract, and neither `lectures.mjs` nor the lecture
+template mentions one. A **module** still does: a module is a unit in its own
+right, included by any number of courses, so its abstract travels with it.
+
 **Terms are not modeled** — a course directory represents the course as
 currently taught and is edited in place each semester, because rebuilding a
 past term's artifacts is not a use case.
@@ -126,8 +138,8 @@ Per-entry optional artifacts are declared by two maps, at the top of
 module:
 
 ```js
-// lectures.mjs
-const OPTIONAL_FILES = { abstract: 'abstract.md', lab: 'lab.md' }
+// lectures.mjs — no `abstract`; that is the course's, not a lecture's
+const OPTIONAL_FILES = { lab: 'lab.md' }
 const OPTIONAL_DIRS = { code: 'code', public: 'public' }
 
 // modules.mjs
@@ -154,7 +166,7 @@ The tooling once hung every path off a single `repoRoot`. It now resolves three:
 | Root | Resolved from | Owns |
 |---|---|---|
 | `packageRoot` | `import.meta.url` (`content.mjs`) | `course-kit/assets/notes/*`, `course-kit/templates/` |
-| `courseRoot` | cwd, or `--course` | `course.json`, `lectures/`, `dist/` |
+| `courseRoot` | cwd, or `--course` | `course.json`, `abstract.md`, `lectures/`, `dist/` |
 | `workspaceRoot` | nearest ancestor with `node_modules/.bin/slidev` | the Slidev binary, `courses/`, and `modules/` |
 
 `selectCourses()` decides which courses a command runs against: `--course` wins
@@ -218,9 +230,11 @@ client styles would otherwise outrank a bare element selector.
 ### The prose pipeline
 
 `abstract.md`, `tutorial.md`, `notes.md`, and `lab.md` all go through the same
-renderer (`notes.mjs`) — there is no per-type template. `buildDocument()`
-derives the output name from the source basename, so a new document type needs
-no change there at all. Abstracts opt out of the PDF stage: a paragraph-length
+renderer (`notes.mjs`) — there is no per-type template. That holds regardless
+of which level a document hangs off: a course's `abstract.md` takes the same
+path as a module's, just with the course's `dist/` as its output directory.
+`buildDocument()` derives the output name from the source basename, so a new
+document type needs no change there at all. Abstracts opt out of the PDF stage: a paragraph-length
 PDF has no audience and costs a browser launch.
 
 Output is deliberately **self-contained** — CSS inlined into a `<style>` element,
