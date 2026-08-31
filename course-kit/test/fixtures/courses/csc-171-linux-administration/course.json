@@ -1,4 +1,5 @@
 {
   "title": "CSC 171 — Linux Administration",
-  "base": "./"
+  "base": "./",
+  "modules": ["markdown", "gcp-vm"]
 }

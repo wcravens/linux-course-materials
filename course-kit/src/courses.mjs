@@ -1,8 +1,10 @@
 // Course discovery, and the roots a command resolves its paths against.
 //
 // A course is any directory under `courses/` holding a `course.json`. As with
-// lectures there is no manifest: adding a course requires no registration
-// anywhere, and the title is read from the file that marks the directory.
+// lectures and modules there is no manifest: adding a course requires no
+// registration anywhere, and the title is read from the file that marks the
+// directory. `course.json` holds `{ title, base, modules }` — the last being
+// the shared modules this course includes, by name.
 //
 // Three roots replace the single repository root the tooling used when it
 // served one course:
@@ -98,6 +100,12 @@ export async function readCourse (dir) {
     slug,
     title: typeof config.title === 'string' ? config.title : null,
     base: typeof config.base === 'string' ? config.base : './',
+    // The modules this course includes, in the order it wants them. Stored
+    // unresolved: `modulesDir` hangs off the workspace root, which a course
+    // does not know about, so `course.mjs` turns these into descriptors.
+    moduleSelectors: Array.isArray(config.modules)
+      ? config.modules.filter((entry) => typeof entry === 'string')
+      : [],
     lecturesDir: path.join(dir, 'lectures'),
     distDir: path.join(dir, 'dist')
   }

@@ -151,3 +151,24 @@ test('a course code reads as it is written in prose', () => {
   assert.equal(courseCodeLabel({ code: null, id: 'workshop', title: 'Weekend Workshop' }),
     'Weekend Workshop')
 })
+
+test('a course lists the modules it includes, in the order given', async () => {
+  const course = await readCourse(path.join(COURSES, 'csc-171-linux-administration'))
+  assert.deepEqual(course.moduleSelectors, ['markdown', 'gcp-vm'])
+})
+
+test('a course.json without a modules key includes no modules', async () => {
+  const course = await readCourse(INTRO)
+  assert.deepEqual(course.moduleSelectors, [])
+})
+
+test('a malformed modules key is ignored rather than crashed on', async () => {
+  // workshop/course.json carries `"modules": "markdown"` — a string, not an array.
+  const course = await readCourse(path.join(COURSES, 'workshop'))
+  assert.deepEqual(course.moduleSelectors, [])
+})
+
+test('a course declares its kind', async () => {
+  const course = await readCourse(INTRO)
+  assert.equal(course.kind, 'course')
+})
