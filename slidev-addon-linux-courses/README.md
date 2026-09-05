@@ -36,6 +36,7 @@ by convention.
 components/   # auto-registered in every deck, by filename
 layouts/      # selectable as `layout:` in slide frontmatter, by filename
 styles/       # index.css is auto-imported into every deck
+slide-top.vue # a layer drawn over every slide in every deck
 ```
 
 `components/` and `layouts/` are empty for now — the decks use Slidev's built-in
@@ -45,6 +46,19 @@ every deck with no other change.
 
 `styles/index.css` is the entry point and does nothing but import the modules
 beside it. Add a new module there when adding a file.
+
+### `slide-top.vue`
+
+The slide number, `number / total`, in the bottom-right corner.
+
+Slidev reads four layer files from the root of each of its roots — this addon
+among them. `slide-top.vue` is rendered inside every slide's wrapper and after
+the slide's own content, which is what puts it above the layout background and
+into the exported PDF. The `global-*.vue` layers render once, outside any slide,
+where there is no page number in scope, so they are the wrong hook for this.
+
+Page 1 is skipped: it is the cover, and the template already puts a
+`Press space to advance` note in that corner.
 
 ### `styles/tables.css`
 
