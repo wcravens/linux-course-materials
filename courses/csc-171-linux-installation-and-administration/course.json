@@ -1,5 +1,9 @@
 {
   "title": "CSC 171 — Linux Installation and Administration",
   "base": "./",
-  "modules": ["markdown", "gcp-vm"]
+  "modules": [
+    "markdown",
+    "gcp-vm",
+    "gcp-csc171-default-compute-instance-config"
+  ]
 }
