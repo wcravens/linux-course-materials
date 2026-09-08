@@ -270,7 +270,7 @@ layout: section
 
 **Text-based editors** (work anywhere):
 - `nano` — simple, menu-driven (beginner-friendly)
-- `vi` / `vim` — powerful, always available (next chapter)
+- `vi` / `vim` — powerful, always available (not covered in this course)
 - `emacs` — all-purpose programming environment
 
 ---

@@ -398,7 +398,7 @@ alias ls='ls --color=auto'
 # Alias Persistence
 
 - Aliases defined on the command line **vanish when the shell session ends**
-- To make aliases permanent, add them to shell configuration files (covered in Chapter 11)
+- To make aliases permanent, add them to shell configuration files (covered in TLCL chapter 11)
 - Always use `type` to check for name conflicts before creating an alias
 
 ---

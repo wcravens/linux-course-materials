@@ -238,7 +238,7 @@ ln -s target linkname
 
 ### 13. Hard Links
 
-A **hard link** is a second type of link, different in mechanism from symbolic links. Unlike symlinks, hard links are additional directory entries that point directly to the same data on disk. Hard links are explored in more detail in the next chapter.
+A **hard link** is a second type of link, different in mechanism from symbolic links. Unlike symlinks, hard links are additional directory entries that point directly to the same data on disk. Hard links are explored in more detail in the next lecture.
 
 ---
 

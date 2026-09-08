@@ -378,7 +378,7 @@ ls -l docs_link
 
 - A second type of link with a different mechanism
 - Additional directory entries pointing to the same data on disk
-- Explored in detail in the next chapter
+- Explored in detail in the next lecture
 
 ---
 layout: section
