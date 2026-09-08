@@ -422,7 +422,7 @@ Explain what virtual consoles are and describe a practical scenario in which a v
 
 **Challenge 10: Building a System Report**
 
-Using only the commands introduced in Chapter 1, construct a sequence of commands (one per line) that would display a brief "system report" containing:
+Using only the commands introduced in TLCL chapter 1, construct a sequence of commands (one per line) that would display a brief "system report" containing:
 
 1. The current date and time
 2. How long the system has been running

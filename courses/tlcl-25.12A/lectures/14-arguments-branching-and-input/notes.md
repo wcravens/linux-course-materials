@@ -482,7 +482,7 @@ It would be natural to write:
 echo "foo" | read       # REPLY is empty afterwards!
 ```
 
-…but pipelines run each stage in a **subshell**. `read` assigns to `REPLY` *inside the subshell*, and that environment is destroyed the moment the pipeline finishes. The classic workarounds are a here string (`<<< "foo"`) or process substitution (covered in Chapter 36).
+…but pipelines run each stage in a **subshell**. `read` assigns to `REPLY` *inside the subshell*, and that environment is destroyed the moment the pipeline finishes. The classic workarounds are a here string (`<<< "foo"`) or process substitution (covered in TLCL chapter 36).
 
 ### 23. Validating Input (Ch 28)
 

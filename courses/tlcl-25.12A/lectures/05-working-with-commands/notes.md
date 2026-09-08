@@ -272,7 +272,7 @@ alias
 # Displays all currently defined aliases
 ```
 
-**Important:** Aliases defined on the command line vanish when the shell session ends. Making aliases permanent requires adding them to shell configuration files (covered in Chapter 11).
+**Important:** Aliases defined on the command line vanish when the shell session ends. Making aliases permanent requires adding them to shell configuration files (covered in TLCL chapter 11).
 
 ---
 

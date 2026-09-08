@@ -119,7 +119,7 @@ ls -l foo.txt
 # -rw------- 1 me me 0 2025-03-06 14:52 foo.txt
 ```
 
-The most common octal values are `7` (rwx), `6` (rw-), `5` (r-x), `4` (r--), and `0` (---).
+The most common octal values are `7` (`rwx`), `6` (`rw-`), `5` (`r-x`), `4` (`r--`), and `0` (`---`).
 
 **Symbolic notation** uses three parts: who is affected, the operation, and the permission.
 
@@ -161,7 +161,7 @@ When umask is `0000`, files are created with the maximum default permissions (`r
 | | Owner | Group | Other |
 |---|---|---|---|
 | Original file mode | `rw-` | `rw-` | `rw-` |
-| Mask `0002` (binary `000 000 010`) | --- | --- | `-w-` |
+| Mask `0002` (binary `000 000 010`) | `---` | `---` | `-w-` |
 | Result | `rw-` | `rw-` | `r--` |
 
 With a mask of `0022`:
@@ -169,7 +169,7 @@ With a mask of `0022`:
 | | Owner | Group | Other |
 |---|---|---|---|
 | Original file mode | `rw-` | `rw-` | `rw-` |
-| Mask `0022` (binary `000 010 010`) | --- | `-w-` | `-w-` |
+| Mask `0022` (binary `000 010 010`) | `---` | `-w-` | `-w-` |
 | Result | `rw-` | `r--` | `r--` |
 
 ```bash

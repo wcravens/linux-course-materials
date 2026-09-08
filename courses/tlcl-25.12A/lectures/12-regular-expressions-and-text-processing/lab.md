@@ -22,7 +22,7 @@ for i in {1..10}; do
     echo "(${RANDOM:0:3}) ${RANDOM:0:3}-${RANDOM:0:4}" >> phonelist.txt
 done
 
-# Build the distros file used throughout Chapter 20
+# Build the distros file used throughout TLCL chapter 20
 cat > distros.txt <<'EOF'
 SUSE	10.2	12/07/2006
 Fedora	10	11/25/2008
