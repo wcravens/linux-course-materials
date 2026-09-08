@@ -223,7 +223,7 @@ layout: section
 
 # Interrupting a Process
 
-Press **Ctrl-c** to send an INT (interrupt) signal to the foreground process
+Press <kbd>Ctrl</kbd>-<kbd>c</kbd> to send an INT (interrupt) signal to the foreground process
 
 ```bash
 sleep 300
@@ -282,7 +282,7 @@ fg %1
 
 # Stopping (Pausing) a Process
 
-Press **Ctrl-z** to stop (pause) the foreground process without terminating it
+Press <kbd>Ctrl</kbd>-<kbd>z</kbd> to stop (pause) the foreground process without terminating it
 
 ```bash
 sleep 300
@@ -321,8 +321,8 @@ This is handy when you forget to append `&`
 | List jobs | `jobs` |
 | Foreground a job | `fg %N` |
 | Background a job | `bg %N` |
-| Pause foreground | Ctrl-z |
-| Interrupt foreground | Ctrl-c |
+| Pause foreground | `Ctrl-z` |
+| Interrupt foreground | `Ctrl-c` |
 
 ---
 layout: section
@@ -381,8 +381,8 @@ Signals are how the operating system **communicates** with programs
 
 | Keystroke | Signal | Effect |
 |-----------|--------|--------|
-| Ctrl-c | INT (2) | Interrupt — terminate the program |
-| Ctrl-z | TSTP (20) | Terminal stop — pause the program |
+| `Ctrl-c` | INT (2) | Interrupt — terminate the program |
+| `Ctrl-z` | TSTP (20) | Terminal stop — pause the program |
 
 Programs "listen" for signals and can act on them (e.g., saving work before exiting)
 
@@ -428,12 +428,12 @@ kill %1
 | # | Name | Can Catch? | Meaning |
 |---|------|-----------|---------|
 | 1 | HUP | Yes | Hangup — terminal closed; daemons reload config |
-| 2 | INT | Yes | Interrupt — same as Ctrl-c |
+| 2 | INT | Yes | Interrupt — same as `Ctrl-c` |
 | 9 | KILL | **No** | Kernel terminates immediately — last resort |
 | 15 | TERM | Yes | Graceful termination (default) |
 | 18 | CONT | Yes | Continue a stopped process |
 | 19 | STOP | **No** | Force-pause (cannot be ignored) |
-| 20 | TSTP | Yes | Terminal stop — Ctrl-z |
+| 20 | TSTP | Yes | Terminal stop — `Ctrl-z` |
 
 ---
 
@@ -805,7 +805,7 @@ Today we learned how to:
 
 - Understand how Linux manages processes (PID, parent-child, daemons)
 - View processes with `ps` (snapshot) and `top` (dynamic)
-- Control processes with job control (`&`, `fg`, `bg`, Ctrl-c, Ctrl-z)
+- Control processes with job control (`&`, `fg`, `bg`, <kbd>Ctrl</kbd>-<kbd>c</kbd>, <kbd>Ctrl</kbd>-<kbd>z</kbd>)
 - Send signals to processes with `kill` and `killall`
 - Adjust scheduling priority with `nice` and `renice`
 - Keep processes alive with `nohup`
