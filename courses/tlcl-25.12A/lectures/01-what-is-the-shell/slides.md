@@ -592,14 +592,14 @@ layout: center
 class: text-center
 ---
 
-<div class="kicker">CSC 118 · Introduction to Linux · Lecture 2</div>
+<div class="kicker">The Linux Command Line · Lecture 1</div>
 
 # You Have a Prompt
 
 <div class="term">
 <div class="term-bar"><i></i><i></i><i></i><span>student@parkland: ~</span></div>
-<pre class="term-body"><span class="ps1">[student@parkland ~]$</span> echo "Lecture 2 complete"
-Lecture 2 complete
+<pre class="term-body"><span class="ps1">[student@parkland ~]$</span> echo "Lecture 1 complete"
+Lecture 1 complete
 <span class="ps1">[student@parkland ~]$</span> <span class="cursor"></span></pre>
 </div>
 
