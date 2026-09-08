@@ -33,6 +33,8 @@ A command entered at the shell prompt can be one of four different things. Under
 
 The four types of commands:
 
+Table: The four types of commands, what each one is, and an example of each
+
 | Type | Description | Example |
 |------|-------------|---------|
 | **Executable program** | Compiled binaries or scripts stored in directories like `/usr/bin` | `cp`, `python3` |
@@ -120,6 +122,8 @@ man ls
 
 Man pages are organized into numbered sections. When a command exists in multiple sections, the section number can be specified explicitly.
 
+Table: The numbered man page sections and what kind of content each one holds
+
 | Section | Contents |
 |---------|----------|
 | 1 | User commands |
@@ -181,6 +185,8 @@ info coreutils
 ```
 
 **Key navigation commands within `info`:**
+
+Table: The `info` navigation keys covered in this lecture and what each one does
 
 | Key | Action |
 |-----|--------|
@@ -280,6 +286,8 @@ alias
 
 ### Key Commands Summary
 
+Table: The commands covered in this lecture and what each one does
+
 | Command | Purpose |
 |---------|---------|
 | `type` | Display the type of a command (builtin, alias, executable, function) |
@@ -294,6 +302,8 @@ alias
 
 ### Command Documentation Summary
 
+Table: The documentation sources covered in this lecture, what each is best for, and its syntax
+
 | Documentation Source | Best For | Syntax |
 |---------------------|----------|--------|
 | `type` | Determining what kind of command it is | `type command` |
@@ -307,6 +317,8 @@ alias
 | `/usr/share/doc` | Package-specific documentation files | `ls /usr/share/doc` |
 
 ### Man Page Sections Summary
+
+Table: The numbered man page sections, what each holds, and a sample command to view one
 
 | Section | Contents | Example |
 |---------|----------|---------|

@@ -384,6 +384,8 @@ You are currently in `/usr/local/share`. Write both an absolute pathname and a r
 
 Match each shortcut on the left with its behavior on the right:
 
+Table: The `cd` shortcuts from this lecture next to a scrambled list of behaviors to match them to
+
 | Shortcut | Behavior |
 |----------|----------|
 | `cd` | A. Changes to the home directory of *user_name* |

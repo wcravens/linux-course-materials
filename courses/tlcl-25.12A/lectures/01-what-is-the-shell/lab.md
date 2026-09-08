@@ -398,6 +398,8 @@ history | tail -20
 
 Match each keyboard action to its function in the terminal:
 
+Table: Keyboard and mouse actions from this lecture, with their function left blank to fill in
+
 | Action | Function |
 |--------|----------|
 | Up-arrow | ? |

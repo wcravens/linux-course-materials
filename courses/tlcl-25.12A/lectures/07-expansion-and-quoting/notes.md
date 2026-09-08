@@ -112,6 +112,8 @@ Arithmetic expansion supports only integers (whole numbers), not floating-point 
 
 **Supported operators:**
 
+Table: The arithmetic operators supported inside `$((...))` and what each one does
+
 | Operator | Description |
 |----------|-------------|
 | `+` | Addition |
@@ -287,6 +289,8 @@ The backslash is commonly used inside double quotes to escape `$`, `\`, `` ` ``,
 
 When used with `echo -e` or inside `$' '` quoting, certain backslash sequences have special meaning:
 
+Table: The backslash escape sequences covered in this lecture and what each one produces
+
 | Sequence | Meaning |
 |----------|---------|
 | `\a` | Bell (alert) |
@@ -312,12 +316,16 @@ echo -e "Column1\tColumn2"
 
 ### Key Commands Summary
 
+Table: The commands covered in this lecture and what each one does
+
 | Command | Purpose |
 |---------|---------|
 | `echo` | Display text and demonstrate expansions |
 | `printenv` | Display the value of environment variables |
 
 ### Expansion Types Summary
+
+Table: The six kinds of shell expansion covered in this lecture, their syntax, and an example
 
 | Expansion Type | Syntax | Example |
 |----------------|--------|---------|
@@ -329,6 +337,8 @@ echo -e "Column1\tColumn2"
 | Command | `$(cmd)` | `echo $(date)` |
 
 ### Quoting Summary
+
+Table: The quoting methods covered in this lecture, their syntax, what each suppresses, and what it still allows
 
 | Method | Syntax | Suppresses | Allows |
 |--------|--------|------------|--------|

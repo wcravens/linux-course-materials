@@ -148,6 +148,8 @@ file_info /etc/passwd     # $1 inside the function is /etc/passwd
 
 Two special parameters expand to the *complete* list of positional parameters but with subtly different word-splitting behavior:
 
+Table: The `$*` and `$@` forms, quoted and unquoted, and how each one word-splits
+
 | Parameter | Behavior |
 |---|---|
 | `$*` | Expands to the list of positional parameters, separated by spaces. |
@@ -205,6 +207,8 @@ done
 ```
 
 Two extra cases handle errors: `\?` (note the backslash — `?` is also a wildcard) for unknown letters, and `:` (when the leading `:` of the optstring is present) for missing required arguments. `getopts` populates `OPTARG` with the relevant letter or value, and increments `OPTIND` to the next position.
+
+Table: The two option-parsing approaches covered in this lecture and what each is best suited for
 
 | Approach | Best for |
 |---|---|
@@ -289,6 +293,8 @@ Both return exit status `0` if *expression* is true and `1` if it is false. With
 
 #### File Expressions
 
+Table: The `test` file expressions covered in this lecture and the condition each one checks
+
 | Expression | True if |
 |---|---|
 | `-e file` | `file` exists |
@@ -307,6 +313,8 @@ Both return exit status `0` if *expression* is true and `1` if it is false. With
 
 #### String Expressions
 
+Table: The `test` string expressions covered in this lecture and the condition each one checks
+
 | Expression | True if |
 |---|---|
 | `string` | `string` is not null |
@@ -319,6 +327,8 @@ Both return exit status `0` if *expression* is true and `1` if it is false. With
 > **Quote your variables in test expressions.** Writing `[ -z "$ANSWER" ]` is safer than `[ -z $ANSWER ]`. If `$ANSWER` is empty or contains spaces, the unquoted form expands to the wrong number of arguments and `test` produces a confusing error.
 
 #### Integer Expressions
+
+Table: The `test` integer expressions covered in this lecture and the comparison each one performs
 
 | Expression | True if |
 |---|---|
@@ -360,6 +370,8 @@ Because `(( ))` is part of the shell syntax, variables inside it are referenced 
 ### 16. Combining Expressions (Ch 27)
 
 Logical operators connect simple expressions into compound ones. `test` and the modern compound commands use different operators:
+
+Table: The logical operators covered in this lecture, in `test` syntax versus `[[ ]]`/`(( ))` syntax
 
 | Operation | `test` / `[ ]` | `[[ ]]` and `(( ))` |
 |---|---|---|
@@ -423,6 +435,8 @@ read var1 var2 var3 var4 var5
 ```
 
 ### 19. `read` Options (Ch 28)
+
+Table: The `read` options covered in this lecture and what each one does
 
 | Option | Effect |
 |---|---|
@@ -543,6 +557,8 @@ This is the natural endpoint of the module — the script accepts arguments (Ch 
 
 ### Key Commands Summary
 
+Table: The commands and parameters covered in this lecture and what each one does
+
 | Command | Purpose |
 |---------|---------|
 | `$0` | Pathname of the running script (never affected by `shift`) |
@@ -564,6 +580,8 @@ This is the natural endpoint of the module — the script accepts arguments (Ch 
 
 ### Conditional Expression Cheat Sheet
 
+Table: Common conditional tests written in `test`, `[[ ]]`, and `(( ))` syntax side by side
+
 | Test | `test` / `[ ]` | `[[ ]]` | `(( ))` |
 |---|---|---|---|
 | File exists | `-e file` | `-e file` | — |
@@ -577,6 +595,8 @@ This is the natural endpoint of the module — the script accepts arguments (Ch 
 | NOT | `!` | `!` | `!` |
 
 ### `read` Option Quick Reference
+
+Table: The `read` options covered in this lecture, their purpose, and a typical use case
 
 | Option | Purpose | Typical use |
 |---|---|---|

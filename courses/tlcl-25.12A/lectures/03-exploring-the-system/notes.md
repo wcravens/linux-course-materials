@@ -58,6 +58,8 @@ Options are case-sensitive. For example, `-s` and `-S` have different meanings.
 
 ### 3. Common ls Options
 
+Table: The `ls` options covered in this lecture, their long forms, and what each one does
+
 | Option | Long Option | Description |
 |--------|-------------|-------------|
 | `-a` | `--all` | List all files, including hidden (dot) files |
@@ -88,6 +90,8 @@ The `ls -l` command produces detailed output. Each field in a long-format line h
 ls -l
 # -rw-r--r-- 1 root root 3576296 2024-03-22 11:18 TLCL-24.11.pdf
 ```
+
+Table: The fields of an example `ls -l` output line and what each one means
 
 | Field | Meaning |
 |-------|---------|
@@ -140,6 +144,8 @@ Text is not the same as a word processor document. Word processor files contain 
 
 ### 8. less Commands
 
+Table: The `less` keys covered in this lecture and the action each one performs
+
 | Command | Action |
 |---------|--------|
 | Page Up or `b` | Scroll back one page |
@@ -171,6 +177,8 @@ If the terminal becomes scrambled (for example, by accidentally viewing a binary
 ### 11. Directories Found on Linux Systems
 
 Linux systems follow a standard directory layout. Key directories include:
+
+Table: The standard Linux directories covered in this lecture and what each one holds
 
 | Directory | Description |
 |-----------|-------------|
@@ -238,6 +246,8 @@ A **hard link** is a second type of link, different in mechanism from symbolic l
 
 ### Key Commands Summary
 
+Table: The commands covered in this lecture and what each one does
+
 | Command | Purpose |
 |---------|---------|
 | `ls` | List directory contents |
@@ -245,6 +255,8 @@ A **hard link** is a second type of link, different in mechanism from symbolic l
 | `less` | View file contents page by page |
 
 ### Common ls Options Summary
+
+Table: The `ls` options covered in this lecture, their purpose, and an example invocation
 
 | Option | Long Option | Purpose | Example |
 |--------|-------------|---------|---------|
@@ -259,6 +271,8 @@ A **hard link** is a second type of link, different in mechanism from symbolic l
 
 ### Long Format Fields Summary
 
+Table: Each position in an `ls -l` line, the field it holds, and an example value
+
 | Position | Field | Example |
 |----------|-------|---------|
 | 1 | File type and permissions | `-rw-r--r--` |
@@ -270,6 +284,8 @@ A **hard link** is a second type of link, different in mechanism from symbolic l
 | 7 | Filename | `README.md` |
 
 ### less Navigation Summary
+
+Table: The `less` keys covered in this lecture and the action each one performs
 
 | Key | Action |
 |-----|--------|

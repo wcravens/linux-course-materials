@@ -42,6 +42,8 @@ id
 
 User accounts are defined in three key files:
 
+Table: The three account files covered in this lecture and what each one stores
+
 | File | Contents |
 |------|----------|
 | `/etc/passwd` | Username, uid, gid, real name, home directory, login shell |
@@ -61,6 +63,8 @@ ls -l foo.txt
 
 **File types:**
 
+Table: The first character of a long listing and the file type each one indicates
+
 | Attribute | File Type |
 |-----------|-----------|
 | `-` | A regular file |
@@ -75,6 +79,8 @@ The nine mode characters are divided into three groups of three — owner, group
 
 **Permission attributes — files vs. directories:**
 
+Table: Each permission attribute and what it controls on files versus directories
+
 | Attribute | Files | Directories |
 |-----------|-------|-------------|
 | `r` | Allows the file to be opened and read | Allows directory contents to be listed (requires `x` for file details) |
@@ -82,6 +88,8 @@ The nine mode characters are divided into three groups of three — owner, group
 | `x` | Allows the file to be executed as a program; scripts also need `r` | Allows entering the directory (`cd`) and accessing file metadata |
 
 **Permission attribute examples:**
+
+Table: Sample full attribute strings from `ls -l` and what each combination means
 
 | File Attributes | Meaning |
 |-----------------|---------|
@@ -99,6 +107,8 @@ The nine mode characters are divided into three groups of three — owner, group
 The `chmod` command changes the mode (permissions) of a file or directory. Only the file's owner or the superuser can change a file's mode. It supports two ways of specifying mode changes: **octal notation** and **symbolic notation**.
 
 **Octal notation** maps each octal digit to three binary digits, which correspond directly to the `rwx` permission bits.
+
+Table: Each octal digit, its binary form, and the `rwx` mode it corresponds to
 
 | Octal | Binary | File Mode |
 |-------|--------|-----------|
@@ -123,6 +133,8 @@ The most common octal values are `7` (`rwx`), `6` (`rw-`), `5` (`r-x`), `4` (`r-
 
 **Symbolic notation** uses three parts: who is affected, the operation, and the permission.
 
+Table: The "who" symbols used in symbolic mode and who each one refers to
+
 | Symbol | Meaning |
 |--------|---------|
 | `u` | The file or directory owner (user) |
@@ -131,6 +143,8 @@ The most common octal values are `7` (`rwx`), `6` (`rw-`), `5` (`r-x`), `4` (`r-
 | `a` | All (equivalent to `u`, `g`, and `o` combined) |
 
 Operations: `+` adds a permission, `-` removes a permission, `=` sets exact permissions (removing all others).
+
+Table: Sample symbolic mode expressions and what each one does
 
 | Notation | Meaning |
 |----------|---------|
@@ -158,6 +172,8 @@ umask
 
 When umask is `0000`, files are created with the maximum default permissions (`rw-rw-rw-` for files). The mask removes bits from this default.
 
+Table: How a `0002` umask subtracts from the default file mode to produce the created permissions
+
 | | Owner | Group | Other |
 |---|---|---|---|
 | Original file mode | `rw-` | `rw-` | `rw-` |
@@ -165,6 +181,8 @@ When umask is `0000`, files are created with the maximum default permissions (`r
 | Result | `rw-` | `rw-` | `r--` |
 
 With a mask of `0022`:
+
+Table: How a `0022` umask subtracts from the default file mode to produce the created permissions
 
 | | Owner | Group | Other |
 |---|---|---|---|
@@ -241,6 +259,8 @@ Superuser privileges are required to use `chown`. The syntax is:
 chown [owner][:[group]] file...
 ```
 
+Table: The `chown` argument forms covered in this lecture and what each one changes
+
 | Argument | Result |
 |----------|--------|
 | `bob` | Changes the file owner to `bob` |
@@ -287,6 +307,8 @@ The `passwd` command enforces strong passwords, rejecting passwords that are too
 
 The `passwd`, `groupadd`, and `usermod` commands are part of the **shadow-utils** package. Additional commands include:
 
+Table: The shadow-utils commands covered in this lecture and what each one does
+
 | Command | Description |
 |---------|-------------|
 | `lastlog` | Reports the most recent login of all users or a given user |
@@ -303,6 +325,8 @@ The `passwd`, `groupadd`, and `usermod` commands are part of the **shadow-utils*
 
 ### Key Commands Summary
 
+Table: The commands covered in this lecture and what each one does
+
 | Command | Purpose |
 |---------|---------|
 | `id` | Display user and group identity information |
@@ -318,6 +342,8 @@ The `passwd`, `groupadd`, and `usermod` commands are part of the **shadow-utils*
 
 ### Permissions Concepts Summary
 
+Table: The permission-related concepts covered in this lecture, their syntax, and an example
+
 | Concept | Syntax | Example |
 |---------|--------|---------|
 | Octal mode | Three digits (owner/group/other) | `chmod 755 file` |
@@ -329,6 +355,8 @@ The `passwd`, `groupadd`, and `usermod` commands are part of the **shadow-utils*
 | Change owner | `chown user[:group] file` | `chown bob:staff file` |
 
 ### Permission Effects Summary
+
+Table: Each permission bit and what it allows on files versus directories
 
 | Permission | On Files | On Directories |
 |------------|----------|----------------|

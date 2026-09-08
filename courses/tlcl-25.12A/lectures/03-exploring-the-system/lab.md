@@ -379,6 +379,8 @@ Open `/etc/services` with `less` and answer these questions:
 
 Match each directory to its purpose:
 
+Table: Standard directories from this lecture next to a scrambled list of purposes to match them to
+
 | Directory | Purpose |
 |-----------|---------|
 | `/var/log` | a. Home directory for the root user |

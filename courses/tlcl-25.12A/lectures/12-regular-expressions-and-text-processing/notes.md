@@ -50,6 +50,8 @@ A **regular expression** is a symbolic notation for describing patterns in text.
 grep [options] regex [file...]
 ```
 
+Table: The `grep` options covered in this lecture, their long forms, and what each one does
+
 | Option | Long Option | Description |
 |---|---|---|
 | `-i` | `--ignore-case` | Match case-insensitively |
@@ -124,6 +126,8 @@ To include a literal `-`, place it first: `[-AZ]` matches `-`, `A`, or `Z`.
 
 Traditional ranges depend on the locale's collation order. POSIX classes are locale-aware and portable:
 
+Table: The POSIX character classes covered in this lecture and what each one matches
+
 | Class | Matches |
 |---|---|
 | `[:alnum:]` | Alphanumeric characters |
@@ -172,6 +176,8 @@ Without the parentheses, `^bz|gz|zip` means "starts with `bz` *or* contains `gz`
 
 ### 9. Quantifiers (Ch 19)
 
+Table: The regex quantifiers covered in this lecture and how many repetitions each one allows
+
 | Quantifier | Meaning |
 |---|---|
 | `?` | Zero or one of the preceding element |
@@ -211,6 +217,8 @@ cat sort uniq cut paste join tac rev comm diff patch tr sed aspell
 
 `cat` has options for *visualizing* and *modifying* text:
 
+Table: The `cat` options covered in this lecture and what each one does
+
 | Option | Effect |
 |---|---|
 | `-A` | Show non-printing characters: `^I` for tab, `$` at line end |
@@ -227,6 +235,8 @@ cat -A foo.txt
 ### 13. `sort` — Order a Stream (Ch 20)
 
 `sort` reads lines, sorts them, and writes them to standard output. It accepts files on the command line or input on standard input.
+
+Table: The `sort` options covered in this lecture and what each one does
 
 | Option | Effect |
 |---|---|
@@ -263,6 +273,8 @@ sort foo.txt | uniq -c    # count of each unique line
 sort foo.txt | uniq -d    # only the duplicated lines
 ```
 
+Table: The `uniq` options covered in this lecture and what each one does
+
 | Option | Effect |
 |---|---|
 | `-c` | Prefix each line with its count |
@@ -275,6 +287,8 @@ sort foo.txt | uniq -d    # only the duplicated lines
 ### 15. `cut` — Extract Columns or Fields (Ch 20)
 
 `cut` extracts a portion of every line.
+
+Table: The `cut` options covered in this lecture, their long forms, and what each one does
 
 | Option | Long form | Effect |
 |---|---|---|
@@ -396,6 +410,8 @@ If no address is given, the command is applied to every line. The slash is a *co
 
 #### Address Notation
 
+Table: The `sed` address forms covered in this lecture and which lines each one selects
+
 | Address | Description |
 |---|---|
 | `n` | Line number *n* |
@@ -407,6 +423,8 @@ If no address is given, the command is applied to every line. The slash is a *co
 | `addr!` | Negation — every line *except* the address |
 
 #### Common Commands
+
+Table: The `sed` commands covered in this lecture and what each one does
 
 | Command | Description |
 |---|---|
@@ -465,6 +483,8 @@ Without `-H`, `aspell` would treat `html`, `head`, etc. as misspellings.
 
 ### Key Commands Summary
 
+Table: The text-processing commands covered in this lecture and what each one does
+
 | Command | Purpose |
 |---|---|
 | `grep [-E] pattern [file...]` | Print lines matching a regex; `-E` for extended regex |
@@ -486,6 +506,8 @@ Without `-H`, `aspell` would treat `html`, `head`, etc. as misspellings.
 
 ### Regex Notation Cheat Sheet
 
+Table: Regex notation covered in this lecture, its meaning, and whether BRE, ERE, or both support it
+
 | Pattern | Meaning | BRE / ERE |
 |---|---|---|
 | `.` | Any single character | both |
@@ -500,6 +522,8 @@ Without `-H`, `aspell` would treat `html`, `head`, etc. as misspellings.
 | `\1`–`\9` | Backreference to a group | both (in `sed`, only with `\(\)` groups) |
 
 ### `sed` Quick Reference
+
+Table: `sed` syntax elements covered in this lecture, an example of each, and its effect
 
 | Element | Example | Effect |
 |---|---|---|

@@ -130,6 +130,8 @@ pwd
 
 The `cd` command offers several useful shortcuts:
 
+Table: The `cd` shortcuts covered in this lecture and where each one takes you
+
 | Shortcut | Result |
 |----------|--------|
 | `cd` | Changes to the home directory |
@@ -179,6 +181,8 @@ ls -a
 
 ### Key Commands Summary
 
+Table: The commands covered in this lecture and what each one does
+
 | Command | Purpose |
 |---------|---------|
 | `pwd` | Print the current working directory |
@@ -186,6 +190,8 @@ ls -a
 | `ls` | List directory contents |
 
 ### Navigation Concepts Summary
+
+Table: Key navigation terms from this lecture, their meaning, and an example of each
 
 | Concept | Description | Example |
 |---------|-------------|---------|
@@ -199,6 +205,8 @@ ls -a
 
 ### Navigation Shortcuts Summary
 
+Table: Every `cd` shortcut from this lecture and where each one takes you
+
 | Shortcut | Result |
 |----------|--------|
 | `cd` | Changes to home directory |
@@ -209,6 +217,8 @@ ls -a
 | `cd ../..` | Changes two levels up |
 
 ### Pathname Notation Summary
+
+Table: The symbols used in pathnames and what each one represents
 
 | Notation | Meaning |
 |----------|---------|

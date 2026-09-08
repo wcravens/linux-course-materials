@@ -35,6 +35,8 @@ After completing these chapters, you will be able to:
 
 Linux distributions use **package management** systems to install, update, and remove software. Most distributions fall into one of two families based on their package format.
 
+Table: The two major packaging systems and the distributions that use each one
+
 | Packaging System | Distributions |
 |---|---|
 | Debian Style (`.deb`) | Debian, Ubuntu, Linux Mint, Raspberry Pi OS |
@@ -46,6 +48,8 @@ A **package file** is a compressed collection of files that make up a piece of s
 
 Package management tools come in two levels:
 
+Table: The low-level and high-level package tools for Debian versus Red Hat systems
+
 | Level | Debian | Red Hat |
 |---|---|---|
 | Low-level (install/remove files) | `dpkg` | `rpm` |
@@ -54,6 +58,8 @@ Package management tools come in two levels:
 ### 3. Common Package Management Tasks (Ch 14)
 
 The following table consolidates the most common package operations for both Debian and Red Hat systems.
+
+Table: Common package operations and the equivalent command on Debian versus Red Hat systems
 
 | Task | Debian | Red Hat |
 |---|---|---|
@@ -99,6 +105,8 @@ find ~ -type f -name "*.JPG" -size +1M
 
 **Common file type tests:**
 
+Table: The `find -type` codes covered in this lecture and the file type each one matches
+
 | File Type | Description |
 |---|---|
 | `b` | Block special device file |
@@ -108,6 +116,8 @@ find ~ -type f -name "*.JPG" -size +1M
 | `l` | Symbolic link |
 
 **Size units:**
+
+Table: The size-unit suffixes accepted by `find -size` and what each one represents
 
 | Character | Unit |
 |---|---|
@@ -119,6 +129,8 @@ find ~ -type f -name "*.JPG" -size +1M
 A `+` before the number means "greater than," a `-` means "less than," and no sign means "exactly."
 
 **Key tests:**
+
+Table: The `find` tests covered in this lecture and what each one matches
 
 | Test | Description |
 |---|---|
@@ -135,6 +147,8 @@ A `+` before the number means "greater than," a `-` means "less than," and no si
 ### 6. find Operators (Ch 17)
 
 Tests can be combined using logical operators to build complex search expressions.
+
+Table: The logical operators `find` accepts for combining tests and what each one does
 
 | Operator | Description |
 |---|---|
@@ -154,6 +168,8 @@ This finds all files without `0600` permissions or directories without `0700` pe
 `find` can act on its results using predefined or user-defined actions.
 
 **Predefined actions:**
+
+Table: The predefined `find` actions covered in this lecture and what each one does
 
 | Action | Description |
 |---|---|
@@ -221,6 +237,8 @@ bunzip2 foo.txt.bz2
 The **tar** program (tape archive) bundles multiple files and directories into a single archive file. The basic syntax is `tar mode[options] pathname...`.
 
 **Modes:**
+
+Table: The `tar` mode letters covered in this lecture and what each one does
 
 | Mode | Description |
 |---|---|
@@ -312,6 +330,8 @@ rsync -av --delete --rsh=ssh /home remote-sys:/backup
 
 ### Key Commands Summary
 
+Table: The commands covered in this lecture and what each one does
+
 | Command | Purpose |
 |---------|---------|
 | `apt search` | Search for packages in repositories |
@@ -332,6 +352,8 @@ rsync -av --delete --rsh=ssh /home remote-sys:/backup
 | `rsync` | Synchronize files and directories efficiently |
 
 ### Package Management Quick Reference
+
+Table: Common package tasks and the equivalent command on Debian versus Red Hat systems
 
 | Task | Debian (`apt`/`dpkg`) | Red Hat (`dnf`/`rpm`) |
 |---|---|---|

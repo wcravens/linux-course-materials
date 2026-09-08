@@ -28,6 +28,8 @@ After completing this chapter, you will be able to:
 
 **Wildcards** (also called *globbing*) are special characters that allow the shell to select filenames based on patterns of characters. Before a command is executed, the shell expands wildcard characters into a list of matching filenames.
 
+Table: The wildcard characters covered in this lecture and what each one matches
+
 | Wildcard | Meaning |
 |---|---|
 | `*` | Matches any characters (including none) |
@@ -38,6 +40,8 @@ After completing this chapter, you will be able to:
 
 **Character classes** provide named sets of characters:
 
+Table: The named character classes covered in this lecture and what each one matches
+
 | Class | Meaning |
 |---|---|
 | `[:alnum:]` | Any alphanumeric character |
@@ -47,6 +51,8 @@ After completing this chapter, you will be able to:
 | `[:upper:]` | Any uppercase letter |
 
 **Wildcard examples:**
+
+Table: Sample wildcard patterns and the files each one matches
 
 | Pattern | Matches |
 |---|---|
@@ -113,6 +119,8 @@ cp item... directory
 
 **cp options:**
 
+Table: The `cp` options covered in this lecture, their long forms, and what each one does
+
 | Option | Long Option | Meaning |
 |---|---|---|
 | `-a` | `--archive` | Copy files and directories with all attributes (ownership, permissions) including entire directory trees |
@@ -166,6 +174,8 @@ mv item... directory
 
 **mv options:**
 
+Table: The `mv` options covered in this lecture, their long forms, and what each one does
+
 | Option | Long Option | Meaning |
 |---|---|---|
 | `-i` | `--interactive` | Prompt before overwriting an existing file |
@@ -201,6 +211,8 @@ The `rm` command removes (deletes) files and directories.
 **Important:** Linux does not have an undelete command. Once `rm` deletes a file, it is gone. Be especially careful with wildcards.
 
 **rm options:**
+
+Table: The `rm` options covered in this lecture, their long forms, and what each one does
 
 | Option | Long Option | Meaning |
 |---|---|---|
@@ -318,6 +330,8 @@ The chapter provides a complete hands-on walkthrough that demonstrates all comma
 
 ### Key Commands Summary
 
+Table: The commands covered in this lecture and what each one does
+
 | Command | Purpose |
 |---|---|
 | `mkdir` | Create one or more directories |
@@ -328,6 +342,8 @@ The chapter provides a complete hands-on walkthrough that demonstrates all comma
 
 ### Wildcard Summary
 
+Table: The wildcard characters covered in this lecture and what each one matches
+
 | Pattern | Matches |
 |---|---|
 | `*` | Any characters (zero or more) |
@@ -337,6 +353,8 @@ The chapter provides a complete hands-on walkthrough that demonstrates all comma
 | `[[:class:]]` | Any character in the named class |
 
 ### Link Types Summary
+
+Table: Hard links and symbolic links compared feature by feature
 
 | Feature | Hard Link | Symbolic Link |
 |---|---|---|

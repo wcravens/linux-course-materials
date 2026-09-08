@@ -61,6 +61,8 @@ The shebang looks like a comment but is recognized by the kernel only when it is
 
 Scripts must be made executable with `chmod`. Two common modes are used:
 
+Table: The two common `chmod` modes for scripts, what each grants, and when to use it
+
 | Mode | Meaning | When to use |
 |---|---|---|
 | `755` | Owner `rwx`, group and others `r-x` | Scripts anyone on the system may execute |
@@ -102,6 +104,8 @@ Re-read `.bashrc` in the current session with the dot (source) command:
 ```
 
 **Good locations for scripts:**
+
+Table: Conventional script directories covered in this lecture and who each one is meant for
 
 | Location | Intended audience |
 |---|---|
@@ -229,6 +233,8 @@ _EOF_
 
 **Expansion rules:**
 
+Table: The two here-document forms and which expansions each one performs or suppresses
+
 | Form | Parameter expansion | Command substitution | Arithmetic expansion | Quotes inside |
 |---|---|---|---|---|
 | `<< TOKEN` | Performed | Performed | Performed | Treated as literal characters |
@@ -344,6 +350,8 @@ ds () {
 
 ### Key Commands Summary
 
+Table: The commands covered in this lecture and what each one does
+
 | Command | Purpose |
 |---------|---------|
 | `chmod 755` / `chmod 700` | Set world-executable / owner-only-executable permissions |
@@ -360,6 +368,8 @@ ds () {
 
 ### Script Anatomy Summary
 
+Table: The syntax elements a script is built from, covered in this lecture, with an example of each
+
 | Element | Syntax | Example |
 |---|---|---|
 | Shebang | `#!/path/to/interpreter` | `#!/bin/bash` |
@@ -374,6 +384,8 @@ ds () {
 | Here document | `cmd << TOKEN \ntext\nTOKEN` | `cat << _EOF_` |
 
 ### Here Document Behavior
+
+Table: The four here-document forms and how each handles expansion, quotes, and leading tabs
 
 | Form | Parameter / Command / Arithmetic Expansion | Quotes Inside | Leading Tabs |
 |---|---|---|---|

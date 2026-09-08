@@ -140,6 +140,8 @@ Virtual terminals are useful when the graphical desktop becomes unresponsive or 
 
 ### Key Commands Summary
 
+Table: The commands covered in this lecture and what each one does
+
 | Command | Purpose |
 |---------|---------|
 | `date` | Display the current date and time |
@@ -151,6 +153,8 @@ Virtual terminals are useful when the graphical desktop becomes unresponsive or 
 
 ### Shell Prompt Components
 
+Table: The parts of a shell prompt, an example of each, and what it tells you
+
 | Component | Example | Meaning |
 |-----------|---------|---------|
 | Username | `me` | The currently logged-in user |
@@ -160,6 +164,8 @@ Virtual terminals are useful when the graphical desktop becomes unresponsive or 
 | Prompt character | `#` | Superuser (root) session |
 
 ### Keyboard Navigation Summary
+
+Table: Keys used to navigate the command line and history, and what each one does
 
 | Key | Action |
 |-----|--------|

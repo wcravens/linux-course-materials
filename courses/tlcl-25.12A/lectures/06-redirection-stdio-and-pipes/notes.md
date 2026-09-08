@@ -44,6 +44,8 @@ In addition, many programs take input from *standard input* (stdin), which is by
 
 I/O redirection allows us to change where output goes and where input comes from. These three streams are represented by **file descriptors**:
 
+Table: The standard file descriptors, their names, and where each one goes by default
+
 | File Descriptor | Name | Default Destination |
 |-----------------|------|---------------------|
 | 0 | stdin | Keyboard |
@@ -231,6 +233,8 @@ tar -tzf archive.tar.gz               # List contents without extracting
 
 Common `tar` options:
 
+Table: The `tar` flags covered in this lecture and what each one does
+
 | Flag | Meaning |
 |------|---------|
 | `-c` | Create archive |
@@ -246,6 +250,8 @@ Common `tar` options:
 ## Additional Resources
 
 ### Key Commands Summary
+
+Table: The commands covered in this lecture and what each one does
 
 | Command | Purpose |
 |---------|---------|
@@ -266,6 +272,8 @@ Common `tar` options:
 
 ### Redirection Operators Summary
 
+Table: The redirection operators covered in this lecture, what each does, and an example
+
 | Operator | Description | Example |
 |----------|-------------|---------|
 | `>` | Redirect stdout (overwrite) | `ls > file.txt` |
@@ -277,6 +285,8 @@ Common `tar` options:
 | `\|` | Pipe stdout to next command | `ls \| grep ".txt"` |
 
 ### File Descriptors Summary
+
+Table: The standard file descriptors, their names, defaults, and the operator that redirects each
 
 | FD | Name | Default | Redirect With |
 |----|------|---------|---------------|

@@ -76,6 +76,8 @@ A `?` in the TTY column indicates no controlling terminal. This form adds the **
 
 **Process States (STAT column):**
 
+Table: The `ps` STAT column codes covered in this lecture and what each one means
+
 | State | Meaning |
 |-------|---------|
 | `R` | Running — the process is running or ready to run |
@@ -99,6 +101,8 @@ ps aux
 
 **Popular BSD-style ps options:**
 
+Table: The BSD-style `ps` options covered in this lecture and what each one shows
+
 | Option | Function |
 |--------|----------|
 | `x` | List the current user's running processes |
@@ -107,6 +111,8 @@ ps aux
 | `u` | Verbose listing |
 
 **BSD-style column headers:**
+
+Table: The BSD-style `ps` column headers and what each one reports
 
 | Header | Meaning |
 |--------|---------|
@@ -135,6 +141,8 @@ top
 ```
 
 **System summary fields:**
+
+Table: The header rows of `top`'s output and what each field in them reports
 
 | Row | Field | Meaning |
 |-----|-------|---------|
@@ -286,6 +294,8 @@ kill 28401
 
 **Common signals:**
 
+Table: The most common signals, their numbers, and what each one means
+
 | Number | Name | Meaning |
 |--------|------|---------|
 | 1 | HUP | Hangup — sent when the controlling terminal closes. Also used by daemons to trigger reinitialization (reread config files). |
@@ -311,6 +321,8 @@ kill %1
 ```
 
 **Other common signals:**
+
+Table: Additional signals worth knowing, their numbers, and what each one means
 
 | Number | Name | Meaning |
 |--------|------|---------|
@@ -380,6 +392,8 @@ When `shutdown` is executed, a message is broadcast to all logged-in users warni
 
 ### 15. More Process-Related Commands
 
+Table: Additional process-monitoring commands covered in this lecture and what each one does
+
 | Command | Description |
 |---------|-------------|
 | `pstree` | Outputs a process list in a tree pattern showing parent-child relationships |
@@ -392,6 +406,8 @@ When `shutdown` is executed, a message is broadcast to all logged-in users warni
 ## Additional Resources
 
 ### Key Commands Summary
+
+Table: The commands covered in this lecture and what each one does
 
 | Command | Purpose |
 |---------|---------|
@@ -411,6 +427,8 @@ When `shutdown` is executed, a message is broadcast to all logged-in users warni
 
 ### Process States Summary
 
+Table: The `ps` STAT codes, their names, descriptions, and an example of each
+
 | State | Name | Description | Example |
 |-------|------|-------------|---------|
 | `R` | Running | Process is running or ready to run | Active computation |
@@ -420,6 +438,8 @@ When `shutdown` is executed, a message is broadcast to all logged-in users warni
 | `Z` | Zombie | Terminated but not cleaned up | Child process awaiting parent |
 
 ### Common Signals Summary
+
+Table: The common signals, how each is sent, whether a program can catch it, and its typical use
 
 | Signal | Number | Sent By | Can Be Caught? | Typical Use |
 |--------|--------|---------|----------------|-------------|
@@ -432,6 +452,8 @@ When `shutdown` is executed, a message is broadcast to all logged-in users warni
 | STOP | 19 | `kill -STOP` | No | Force-pause a process |
 
 ### Job Control Quick Reference
+
+Table: The job-control actions covered in this lecture and the command or keystroke that performs each one
 
 | Action | Command / Keystroke |
 |--------|-------------------|

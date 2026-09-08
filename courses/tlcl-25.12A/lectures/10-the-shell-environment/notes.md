@@ -63,6 +63,8 @@ alias
 
 #### Some Interesting Environment Variables
 
+Table: Notable environment variables covered in this lecture and what each one holds
+
 | Variable | Contents |
 |---|---|
 | `DISPLAY` | Name of the graphical display (e.g., `:0`) |
@@ -90,6 +92,8 @@ When the shell starts, it reads a series of configuration scripts called *startu
 
 **Startup Files for Login Shell Sessions:**
 
+Table: The startup files a login shell reads, in the order it looks for them
+
 | File | Contents |
 |---|---|
 | `/etc/profile` | Global configuration script that applies to all users |
@@ -98,6 +102,8 @@ When the shell starts, it reads a series of configuration scripts called *startu
 | `~/.profile` | Read if neither of the above is found (default on Debian/Ubuntu) |
 
 **Startup Files for Non-Login Shell Sessions:**
+
+Table: The startup files a non-login shell reads, in the order it looks for them
 
 | File | Contents |
 |---|---|
@@ -224,6 +230,8 @@ nano ~/.bashrc
 
 **Essential nano key bindings:**
 
+Table: The essential nano key bindings covered in this lecture and what each one does
+
 | Key | Action |
 |---|---|
 | `Ctrl-x` | Exit nano |
@@ -249,6 +257,8 @@ alias ll='ls -l --color=auto'
 ```
 
 **Meaning of each addition:**
+
+Table: The lines added to a sample startup file and what each one accomplishes
 
 | Line | Meaning |
 |---|---|
@@ -303,6 +313,8 @@ echo $HISTSIZE
 
 ### Key Commands Summary
 
+Table: The commands covered in this lecture and what each one does
+
 | Command | Purpose |
 |---|---|
 | `printenv` | Display all environment variables |
@@ -318,6 +330,8 @@ echo $HISTSIZE
 
 ### Concept Summary
 
+Table: The environment and startup-file concepts covered in this lecture, with a description and example of each
+
 | Concept | Description | Example |
 |---|---|---|
 | Environment variable | Available to the shell and all child processes | `PATH`, `HOME`, `USER` |
@@ -332,6 +346,8 @@ echo $HISTSIZE
 | Commented-out line | Active line disabled by prefixing with `#` | `#alias ll='ls -l'` |
 
 ### Startup File Decision Table
+
+Table: Common configuration goals and which startup file to edit to achieve each one
 
 | Goal | File to Modify |
 |---|---|
