@@ -144,7 +144,7 @@ Text is not the same as a word processor document. Word processor files contain 
 
 ### 8. less Commands
 
-Table: The `less` keys covered in this lecture and the action each one performs
+Table: The `less` keys covered so far and the action each one performs
 
 | Command | Action |
 |---------|--------|
@@ -285,7 +285,7 @@ Table: Each position in an `ls -l` line, the field it holds, and an example valu
 
 ### less Navigation Summary
 
-Table: The `less` keys covered in this lecture and the action each one performs
+Table: Every `less` key covered in this lecture and the action each one performs
 
 | Key | Action |
 |-----|--------|

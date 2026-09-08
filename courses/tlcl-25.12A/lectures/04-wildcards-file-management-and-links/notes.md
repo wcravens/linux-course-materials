@@ -342,7 +342,7 @@ Table: The commands covered in this lecture and what each one does
 
 ### Wildcard Summary
 
-Table: The wildcard characters covered in this lecture and what each one matches
+Table: Sample wildcard patterns covered in this lecture and the files each one matches
 
 | Pattern | Matches |
 |---|---|
