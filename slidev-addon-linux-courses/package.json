@@ -2,10 +2,14 @@
   "name": "slidev-addon-linux-courses",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "Shared components, layouts, and styles for Linux course lecture decks",
   "keywords": [
     "slidev-addon"
   ],
+  "dependencies": {
+    "course-kit": "*"
+  },
   "engines": {
     "slidev": ">=52.0.0"
   }
