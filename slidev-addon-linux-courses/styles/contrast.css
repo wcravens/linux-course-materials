@@ -1,0 +1,82 @@
+/* WCAG AA repairs for deck chrome, so an exported `slides.pdf` survives an LMS
+   accessibility check.
+
+   Code colors are not handled here — those are Shiki's, and `setup/shiki.ts`
+   corrects them at highlight time. What is left is the theme's own way of
+   de-emphasising text, which is opacity: a color that reads fine on a lit
+   screen at 50% drops to around 4:1 once composited onto white, and every
+   checker measures the composited result.
+
+   Scoped to `.slidev-layout` for the same reason `tables.css` is: Slidev's own
+   client styles outrank a bare element selector. */
+
+.slidev-layout {
+  /* 5.3:1 on white and 4.9:1 on the code background, so it clears AA wherever
+     it lands, while still reading as secondary next to near-black body text. */
+  --course-muted-fg: #6b6b6b;
+
+  /* seriph titles every slide in `--slidev-theme-primary`, #5d8392, which is
+     4.10:1 on white. Slide titles are large text, where AA asks only 3:1, so
+     this is already conforming — but it is the single most repeated color in a
+     deck, and a checker that grades every run of text against 4.5:1 without
+     consulting its font size flags all of it. Darkened along its own hue until
+     it clears 4.5:1 outright, which costs nothing visually and removes the
+     argument. Set here rather than on `:root` so it reaches the nested `h1`
+     rule through inheritance, which does not depend on stylesheet order. */
+  --slidev-theme-primary: #567a88;
+}
+
+/* seriph sets `h1 + p { opacity: .5 }` — the line under a slide title, which is
+   on nearly every slide. That composites to #808080 on white: 3.98:1. Trade the
+   opacity for a color that says the same thing and passes. */
+.slidev-layout h1 + p {
+  opacity: 1;
+  color: var(--course-muted-fg);
+}
+
+/* Same fix for seriph's `h6 { opacity: .4 }` eyebrow, which composites to
+   #999999 — 2.85:1. Its own escape hatch, `.opacity-100`, still wins. */
+.slidev-layout h6:not(.opacity-100) {
+  opacity: 1;
+  color: var(--course-muted-fg);
+}
+
+/* A qualifier written inside a slide title with an opacity utility —
+   `# Responsibilities of a Kernel <span class="text-2xl opacity-50">(1 of 2)</span>`.
+   Halving the title color lands at 1.95:1, and 24px large text still needs 3:1.
+   The same trade as above; `.opacity-100` keeps its escape hatch. */
+.slidev-layout h1 [class*="opacity-"]:not(.opacity-100) {
+  opacity: 1;
+  color: var(--course-muted-fg);
+}
+
+/* The cover slide.
+
+   seriph's `cover` layout defaults its background to a Unsplash Source URL that
+   has not resolved since that service was retired, so only its `#0005 → #0008`
+   dimming gradient paints: white text on mid-grey, between 3.4:1 and 4.1:1
+   depending on where on the gradient a line falls. The dead default is worth
+   nothing to anyone, so it is replaced outright rather than per deck.
+
+   `!important` because `handleBackground()` writes the gradient as an inline
+   style, which nothing else can outrank. If a course ever wants a real cover
+   image, this is the rule to relax. */
+.slidev-layout.cover,
+.slidev-layout.intro {
+  background: #1c1c1f !important;
+  background-image: none !important;
+  color: #ffffff;
+
+  /* Light-on-dark now, so the muted token has to invert with it: 10.2:1. */
+  --course-muted-fg: #c8c8c8;
+}
+
+/* Inline code in a cover title — a deck titled ``Introduction to `gcloud` ``
+   has one — keeps Slidev's light `--slidev-code-background` while inheriting
+   the cover's white text: 1.09:1, invisible. The cover is the one place the
+   code background has to invert along with the text. */
+.slidev-layout.cover code,
+.slidev-layout.intro code {
+  background: rgba(255, 255, 255, 0.12);
+  color: inherit;
+}

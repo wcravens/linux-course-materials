@@ -12,7 +12,7 @@
 // lecture-selector grammar stays exactly as it was.
 
 import { spawn } from 'node:child_process'
-import { readFile, writeFile, cp, mkdir, readdir } from 'node:fs/promises'
+import { readFile, writeFile, cp, mkdir, readdir, rm } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import path from 'node:path'
 import {
@@ -33,6 +33,7 @@ import {
   slidevBin
 } from './courses.mjs'
 import { buildDocument } from './notes.mjs'
+import { taggedPdfEnv } from './tagged-pdf.mjs'
 import { writeIndex } from './index.mjs'
 
 const LECTURE_TEMPLATE_DIR = path.join(packageRoot, 'templates', 'lecture')
@@ -267,6 +268,13 @@ async function cmdDev (course, selectors, context) {
 async function buildSlides (entry, course, context) {
   if (!entry.hasSlides) return
   const outDir = path.join(outDirFor(entry, course), 'slides')
+  // Vite empties its own output directory only when that directory sits inside
+  // the project root. Slidev's root is the deck, and `dist/` is nowhere near
+  // it, so nothing clears this and every build leaves its content-hashed chunks
+  // behind. They are unreachable from `index.html`, but they are still uploaded
+  // to the LMS, and they make a build's output impossible to audit — a chunk
+  // from an older build answers questions about the current one.
+  await rm(outDir, { recursive: true, force: true })
   // `--out` resolves against the deck's own directory, so it must be absolute.
   // Hash routing plus a relative base lets the SPA work from whatever path the
   // LMS serves it at, without a rebuild.
@@ -282,8 +290,12 @@ async function exportSlides (entry, course, context) {
   if (!entry.hasSlides) return
   const outPath = path.join(outDirFor(entry, course), 'slides.pdf')
   await mkdir(path.dirname(outPath), { recursive: true })
+  // Slidev's exporter hardcodes its `page.pdf()` options, so the only way to
+  // get an accessible structure tree into the deck is to default it on
+  // Playwright inside the subprocess. See `tagged-pdf.mjs`.
   await run(context.slidev, ['export', entry.slidesPath, '--output', outPath], {
-    cwd: context.workspaceRoot
+    cwd: context.workspaceRoot,
+    env: taggedPdfEnv()
   })
 }
 

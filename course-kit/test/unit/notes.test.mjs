@@ -4,7 +4,8 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { mkdtemp, rm, stat } from 'node:fs/promises'
 import os from 'node:os'
-import { renderNotesHtml, buildDocument, contrastRatio, readableColor } from '../../src/notes.mjs'
+import { renderNotesHtml, buildDocument } from '../../src/notes.mjs'
+import { contrastRatio, readableColor } from '../../src/contrast.mjs'
 
 const fixtures = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'fixtures')
 const SAMPLE = path.join(fixtures, 'notes', 'sample.md')

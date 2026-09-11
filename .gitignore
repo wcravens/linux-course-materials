@@ -4,3 +4,4 @@ dist/
 *.local
 *.swp
 docs/superpowers/
+.superpowers/

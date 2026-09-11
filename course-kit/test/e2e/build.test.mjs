@@ -5,9 +5,11 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
-import { stat, readFile } from 'node:fs/promises'
+import { stat, readFile, readdir } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { isTaggedPdf } from '../helpers/pdf.mjs'
+import { contrastRatio } from '../../src/contrast.mjs'
 
 const run = promisify(execFile)
 
@@ -17,6 +19,11 @@ const BIN = path.join(workspaceRoot, 'course-kit', 'bin', 'course.mjs')
 const COURSE = path.join(workspaceRoot, 'courses', 'csc-118-intro-to-linux')
 const LECTURE = '01-what-is-linux'
 const DIST = path.join(COURSE, 'dist', LECTURE)
+
+// Slidev's `--slidev-code-background` in its light theme, which is what the
+// exported PDF prints code on.
+const SLIDE_CODE_BG = '#f5f5f5'
+const AA = 4.5
 
 test('build produces every artifact for lecture 01', { timeout: 600_000 }, async (t) => {
   // Run from inside the course, which is also how the cwd walk-up finds it.
@@ -68,6 +75,48 @@ test('build produces every artifact for lecture 01', { timeout: 600_000 }, async
     for (const pdf of ['slides.pdf', 'notes.pdf']) {
       const head = (await readFile(path.join(DIST, pdf))).subarray(0, 5).toString('latin1')
       assert.equal(head, '%PDF-', `${pdf} should start with a PDF header`)
+    }
+  })
+
+  // An LMS accessibility checker rejects a PDF with no structure tree, so both
+  // artifacts have to carry one — the deck by way of the `--import` shim, the
+  // prose by asking Playwright directly.
+  await t.test('both PDFs are tagged for accessibility', async () => {
+    for (const pdf of ['slides.pdf', 'notes.pdf']) {
+      assert.ok(await isTaggedPdf(path.join(DIST, pdf)),
+        `${pdf} should carry an accessibility structure tree`)
+    }
+  })
+
+  // The deck's code colors come from the addon's `setup/shiki.ts`, a hook Slidev
+  // resolves from addon roots. Nothing in a build fails if that resolution ever
+  // stops working — the decks would simply go back to shipping vitesse-light's
+  // raw palette, whose comment gray is 2.1:1 here. So assert on the colors in
+  // the built output.
+  //
+  // This lecture's only code block is fenced `text`, which Shiki does not
+  // colorize, so there is often nothing here to check; that the hook loads and
+  // does its job at all is covered by `test/unit/contrast.test.mjs`, which
+  // imports the addon's export directly. What this adds is the end-to-end
+  // reading: whatever colors a real build did emit, none of them fail.
+  await t.test('every code color in the deck clears WCAG AA', async () => {
+    const assets = path.join(DIST, 'slides', 'assets')
+    const chunks = (await readdir(assets)).filter((f) => f.endsWith('.js'))
+
+    const colors = new Set()
+    for (const chunk of chunks) {
+      const js = await readFile(path.join(assets, chunk), 'utf8')
+      // Shiki writes a light/dark pair as custom properties. Only the light one
+      // is printed; the dark is drawn on a background this check knows nothing
+      // about. The key is matched exactly so `--shiki-light-bg` is left out.
+      for (const [, color] of js.matchAll(/"--shiki-light":\s*[`'"](#[0-9a-f]{3,8})[`'"]/gi)) {
+        colors.add(color)
+      }
+    }
+
+    for (const color of colors) {
+      const ratio = contrastRatio(color, SLIDE_CODE_BG)
+      assert.ok(ratio >= AA, `${color} on ${SLIDE_CODE_BG} is ${ratio?.toFixed(2)}:1, below AA`)
     }
   })
 })

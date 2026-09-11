@@ -83,11 +83,12 @@ candidates.
 
 `course-kit/src/course.mjs` is the CLI and the only orchestrator, reached through
 `course-kit/bin/course.mjs` (the `course` bin, which npm links into the workspace
-`node_modules/.bin`). It delegates to six modules: `content.mjs` (the shared
+`node_modules/.bin`). It delegates to seven modules: `content.mjs` (the shared
 selector machinery and the kit's own root), `courses.mjs` (course discovery and
 two of the three roots), `lectures.mjs` (lecture discovery), `modules.mjs`
 (module discovery), `notes.mjs` (Markdown → HTML → PDF), `index.mjs` (a course's
-index page).
+index page), `contrast.mjs` (WCAG arithmetic and the Shiki transformer built on
+it, shared with the deck addon).
 
 ### Discovery is the source of truth, three times
 
@@ -259,13 +260,13 @@ an en dash and quotes become curly — avoid literal `--` in prose). Code is
 highlighted with Shiki using the same themes Slidev uses, so code looks nearly
 identical in both.
 
-Nearly, because prose is held to WCAG AA (4.5:1) and vitesse-light was designed
-for a screen-lit editor: its comment gray is 2.3:1 on paper. A Shiki transformer
-in `notes.mjs` darkens *only* the light-theme colors that fail, in the rendered
-output, keeping the hue — the slides are unaffected. The same transformer
-rewrites the theme background Shiki writes inline on the `<pre>`, which would
-otherwise outrank `--code-bg` from the stylesheet; that variable is parsed out of
-`notes.css` so the two cannot drift.
+Nearly, because output is held to WCAG AA (4.5:1) and vitesse-light was designed
+for a screen-lit editor: its comment gray is 2.3:1 on paper. The Shiki
+transformer in `contrast.mjs` darkens *only* the light-theme colors that fail,
+in the rendered output, keeping the hue. The same transformer rewrites the theme
+background Shiki writes inline on the `<pre>`, which would otherwise outrank
+`--code-bg` from the stylesheet; that variable is parsed out of `notes.css` so
+the two cannot drift.
 
 Accessibility is a real constraint on this output, not a nicety. Table headers
 carry `scope`, colors are checked against the background they actually land on,
@@ -287,6 +288,84 @@ becomes image-heavy.
 `courses/csc-118-intro-to-linux/lectures/01-what-is-linux/public/distro-family-tree.png`
 is 6 MB; referencing it from prose would inline ~8 MB of base64 into `notes.html`.
 
+### Every PDF is tagged, and slides need a shim to get there
+
+An LMS accessibility checker rejects a PDF with no structure tree — the
+`/StructTreeRoot` that carries headings, lists, tables, and figure alt text.
+Chromium emits one only when asked, so both PDF paths have to ask.
+
+The prose path asks directly: `tagged: true` in `renderPdf()`. That is the whole
+fix there, and it is what carries the scoped table headers and captions this
+pipeline already produces through to a screen reader.
+
+The slide path cannot. `slidev export` is a subprocess whose `page.pdf()` options
+are hardcoded, with no flag for this one. So `exportSlides()` spawns it with
+`taggedPdfEnv()`, which adds a `--import` of `course-kit/src/tagged-pdf-shim.mjs`
+to `NODE_OPTIONS`. The shim wraps Playwright's public API — `chromium.launch` →
+`newContext`/`newPage` → `page.pdf` — defaulting `tagged` on while leaving an
+explicit caller option alone. It works because `playwright-chromium` is a bare
+re-export of the same `playwright-core` singleton both processes resolve.
+
+**Delete both files if Slidev ever ships a `--tagged` flag.** The wrapper is on
+Playwright's surface, not Slidev's internals, so a Slidev upgrade cannot silently
+defeat it — but it is still a workaround.
+
+**Do not assert tagging by grepping the PDF for `/StructTreeRoot`.** Slidev
+round-trips every export through pdf-lib to add metadata, and pdf-lib packs the
+catalog into a FlateDecode object stream where that string is compressed away —
+a grep reports untagged on a perfectly good file. `course-kit/test/helpers/pdf.mjs`
+inflates every stream first. It uses Node builtins only, on purpose.
+
+Slide decks title every slide with `#`, so a deck is many `H1`s and no `H2`s.
+That satisfies "has headings" but is a flat hierarchy, and is a known limitation
+rather than an oversight: fixing it means restructuring slide markup across every
+lecture, and changes how Slidev sizes the titles.
+
+### The decks are held to AA too, through an addon setup hook
+
+The prose pipeline reaches its highlighter directly; the slide pipeline cannot,
+because Slidev is a subprocess. For a while that meant only prose got the
+contrast repair, and an LMS accepted `notes.html` while rejecting every
+`slides.pdf` for "insufficient contrast between foreground text and background".
+
+The hook that closes the gap is `slidev-addon-linux-courses/setup/shiki.ts`.
+Slidev's `loadSetups()` resolves `setup/` files over `[themeRoots, addonRoots,
+userRoot]`, so one file in the addon reaches every deck in every course, and the
+`transformers` it returns are passed straight to `@shikijs/markdown-it`. It
+imports `contrastTransformer` from the kit — hence the workspace `course-kit`
+dependency in the addon's manifest, the addon's only one.
+
+**The two pipelines get the same transformer but different color syntax**, which
+is the trap. Ask Shiki for one theme and it writes `color:`; ask for a light/dark
+pair — what Slidev does, because it sets `defaultColor: false` — and it writes
+only `--shiki-light` and `--shiki-dark` custom properties, with no `color:`
+anywhere. A rule matching `color:` alone is a silent no-op on the decks. Both
+names are handled in `contrast.mjs`, anchored with `(^|;)` so `color` cannot
+match inside `background-color` nor `--shiki-light` inside `--shiki-light-bg`.
+The dark-theme properties are deliberately left alone.
+
+Code color is only half of it. The rest is the theme's own de-emphasis, repaired
+in `slidev-addon-linux-courses/styles/contrast.css`, because seriph expresses it
+as opacity and a checker measures the composited result:
+
+- `h1 + p { opacity: .5 }` — the line under a slide title, on nearly every
+  slide — composites to `#808080` on white, 3.98:1. Traded for a solid
+  `--course-muted-fg`.
+- `--slidev-theme-primary` (`#5d8392`, 4.10:1) titles every slide. That is
+  conforming, since titles are large text and AA asks 3:1 there — it is darkened
+  along its own hue anyway, because a checker that ignores font size would flag
+  every title in the deck.
+- seriph's `cover` layout defaults its background to a Unsplash Source URL, and
+  that service is gone. Only its dimming gradient paints, leaving white text on
+  mid-grey at 3.4:1. Replaced with a solid dark cover, which needs `!important`
+  to beat the layout's inline style.
+
+Do not assert this by eye. `contrastRatio()` takes the composited color, and
+the e2e build test reads the built deck's chunks and checks every
+`--shiki-light` value against Slidev's `--slidev-code-background`. A build
+succeeds whether or not the setup hook was found, so that assertion is the only
+thing standing between a Slidev upgrade and a silent return to 2.1:1 comments.
+
 ### The lecture template is shared
 
 `course-kit/templates/lecture/` scaffolds a lecture for *any* course, so it names
@@ -302,6 +381,15 @@ then uploaded by hand — there is no deployment automation. Decks build with
 from whatever path the LMS serves it at without a rebuild. If a relative base
 ever stops working under an LMS, the fallback is an explicit path in
 `course.json`'s `base` rather than a code change.
+
+`buildSlides()` removes a deck's output directory before handing it to Slidev.
+Vite empties its own `outDir` only when that directory is inside the project
+root, and here the root is the deck while `dist/` is three levels away, so
+nothing else ever clears it. Without that `rm`, every build layers a fresh set
+of content-hashed chunks over the last one: unreachable from `index.html`, but
+uploaded to the LMS all the same, and enough to make the output unauditable —
+a stale chunk answers questions about the current build with an old build's
+colors.
 
 A module renders into each including course's `dist/modules/<id>/`, so a
 course's `dist/` stays the entire upload for that course with no sibling
