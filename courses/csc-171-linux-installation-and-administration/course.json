@@ -3,6 +3,7 @@
   "base": "./",
   "modules": [
     "markdown",
+    "mdbook",
     "gcp-vm",
     "gcp-csc171-default-compute-instance-config"
   ]
