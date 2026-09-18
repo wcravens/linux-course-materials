@@ -348,9 +348,15 @@ Code color is only half of it. The rest is the theme's own de-emphasis, repaired
 in `slidev-addon-linux-courses/styles/contrast.css`, because seriph expresses it
 as opacity and a checker measures the composited result:
 
-- `h1 + p { opacity: .5 }` — the line under a slide title, on nearly every
-  slide — composites to `#808080` on white, 3.98:1. Traded for a solid
-  `--course-muted-fg`.
+- `h1 + p { opacity: .5 }` — composites to `#808080` on white, 3.98:1. Traded
+  for a solid `--course-muted-fg`, **and confined to the layouts where a line
+  under the title is actually a subtitle**: `section`, `cover`, `intro`, and
+  `center`. seriph greys that paragraph on every slide, but these decks open an
+  ordinary content slide with body prose far more often than with a subtitle —
+  373 slides against 133 when this was counted — and a paragraph carrying the
+  argument of the slide is not a subtitle. On every other layout the muting is
+  undone with `color: inherit`. Layout is the only signal available, and it is
+  the right one: a slide that wants a muted line under its title is a divider.
 - `--slidev-theme-primary` (`#5d8392`, 4.10:1) titles every slide. That is
   conforming, since titles are large text and AA asks 3:1 there — it is darkened
   along its own hue anyway, because a checker that ignores font size would flag

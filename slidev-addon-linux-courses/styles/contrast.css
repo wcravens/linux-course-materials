@@ -26,10 +26,30 @@
   --slidev-theme-primary: #567a88;
 }
 
-/* seriph sets `h1 + p { opacity: .5 }` — the line under a slide title, which is
-   on nearly every slide. That composites to #808080 on white: 3.98:1. Trade the
-   opacity for a color that says the same thing and passes. */
+/* seriph sets `h1 + p { opacity: .5 }` to de-emphasise the line under a slide
+   title, on the assumption that a paragraph in that position is a subtitle.
+   Two problems, and they need different answers.
+
+   The contrast one: .5 composites to #808080 on white, 3.98:1. Wherever the
+   muting is wanted, the opacity is traded for a solid color that passes.
+
+   The correctness one: these decks open an ordinary content slide with body
+   prose far more often than with a subtitle, and seriph greys the first
+   paragraph either way — 373 slides across the repo when this was written,
+   against 133 where the muting is right. A paragraph carrying the argument of
+   the slide is not a subtitle, so the muting is undone on ordinary layouts and
+   kept where a title genuinely has a line under it: section dividers, the
+   cover, and centred closing slides. Which layout is in play is the only
+   signal available here, and it happens to be the correct one. */
 .slidev-layout h1 + p {
+  opacity: 1;
+  color: inherit;
+}
+
+.slidev-layout.section h1 + p,
+.slidev-layout.cover h1 + p,
+.slidev-layout.intro h1 + p,
+.slidev-layout.center h1 + p {
   opacity: 1;
   color: var(--course-muted-fg);
 }
