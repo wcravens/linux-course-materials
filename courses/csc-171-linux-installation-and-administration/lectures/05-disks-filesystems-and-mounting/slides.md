@@ -816,6 +816,153 @@ What a filesystem actually stores about a file
 
 ---
 
+# The Superblock Comes First
+
+A filesystem keeps metadata at two levels:
+
+| Level | Record | Describes |
+| --- | --- | --- |
+| Filesystem | **Superblock** — one, plus backups | The whole filesystem: geometry, counts, identity, state |
+| File | **Inode** — one per file | A single file: type, owner, mode, size, times, blocks |
+
+At mount, the kernel reads the superblock — 1024 bytes into the partition — before anything
+else. It says how big a block is, how many inodes each block group holds, and how large each
+inode is. Without those numbers, not one inode can be found.
+
+<div class="hint">
+
+The superblock is how the kernel finds an inode. The inode is how it finds a file's data.
+
+</div>
+
+---
+
+# Review: What the Superblock Holds
+
+| Category | `dumpe2fs -h` fields | Why it matters |
+| --- | --- | --- |
+| Identity | Volume name, UUID | How `fstab` and `/dev/disk/by-uuid` name it |
+| Geometry | Block size, blocks per group, inodes per group, inode size | Where every other structure sits on disk |
+| Capacity | Block count, inode count, reserved block count | Fixed at `mkfs` — the inode count forever |
+| Free space | Free blocks, free inodes | What `df -h` and `df -i` report |
+| State | Filesystem state, errors behavior, mount count, last checked | Whether `fsck` runs at boot |
+| Features | `has_journal`, `extent`, `dir_index`, ... | What the kernel must support to mount it |
+
+The geometry row is the one the kernel needs to find anything, because the filesystem is
+not one region. It is many.
+
+---
+
+# Block Groups
+
+ext4 cuts the filesystem into **block groups** of equal size — here, 2620923 blocks become
+**80 groups** of 32768 blocks, each with its own share of **8192 inodes**.
+
+Why 32768? A group's block bitmap is exactly one block: 4096 bytes × 8 bits = 32768 blocks.
+
+Each group carries its own metadata for its own region:
+
+- A **block bitmap** and an **inode bitmap** — which of *this group's* blocks and inodes are free
+- A slice of the **inode table** — 8192 inodes × 256 bytes = 512 blocks
+
+<div class="hint">
+
+Groups keep a file's inode near its data, and a directory's files near each other. Short
+distances on disk were the original point; containing damage to one group is the bonus.
+
+</div>
+
+---
+
+# Where the Superblock Backups Live
+
+<div class="viz">
+<svg viewBox="0 0 860 230" role="img" aria-label="Two rows of forty small cells representing block groups 0 through 79. Nine cells are highlighted as holding a superblock copy: groups 0, 1, 3, 5, 7, 9, 25, 27, and 49.">
+  <g style="fill: none; stroke: var(--baseline); stroke-width: 1">
+    <rect x="30" y="40" width="800" height="36" />
+    <rect x="30" y="120" width="800" height="36" />
+  </g>
+  <g style="stroke: var(--baseline); stroke-width: 1">
+    <path d="M50 40v36M70 40v36M90 40v36M110 40v36M130 40v36M150 40v36M170 40v36M190 40v36M210 40v36M230 40v36M250 40v36M270 40v36M290 40v36M310 40v36M330 40v36M350 40v36M370 40v36M390 40v36M410 40v36M430 40v36M450 40v36M470 40v36M490 40v36M510 40v36M530 40v36M550 40v36M570 40v36M590 40v36M610 40v36M630 40v36M650 40v36M670 40v36M690 40v36M710 40v36M730 40v36M750 40v36M770 40v36M790 40v36M810 40v36" />
+    <path d="M50 120v36M70 120v36M90 120v36M110 120v36M130 120v36M150 120v36M170 120v36M190 120v36M210 120v36M230 120v36M250 120v36M270 120v36M290 120v36M310 120v36M330 120v36M350 120v36M370 120v36M390 120v36M410 120v36M430 120v36M450 120v36M470 120v36M490 120v36M510 120v36M530 120v36M550 120v36M570 120v36M590 120v36M610 120v36M630 120v36M650 120v36M670 120v36M690 120v36M710 120v36M730 120v36M750 120v36M770 120v36M790 120v36M810 120v36" />
+  </g>
+  <g style="fill: var(--bar); stroke: none">
+    <rect x="31" y="41" width="18" height="34" />
+    <rect x="51" y="41" width="18" height="34" />
+    <rect x="91" y="41" width="18" height="34" />
+    <rect x="131" y="41" width="18" height="34" />
+    <rect x="171" y="41" width="18" height="34" />
+    <rect x="211" y="41" width="18" height="34" />
+    <rect x="531" y="41" width="18" height="34" />
+    <rect x="571" y="41" width="18" height="34" />
+    <rect x="211" y="121" width="18" height="34" />
+  </g>
+  <g class="cat" text-anchor="middle" style="font-size: 12px">
+    <text x="40"  y="30">0</text>
+    <text x="60"  y="30">1</text>
+    <text x="100" y="30">3</text>
+    <text x="140" y="30">5</text>
+    <text x="180" y="30">7</text>
+    <text x="220" y="30">9</text>
+    <text x="540" y="30">25</text>
+    <text x="580" y="30">27</text>
+    <text x="820" y="30">39</text>
+    <text x="40"  y="110">40</text>
+    <text x="220" y="110">49</text>
+    <text x="820" y="110">79</text>
+  </g>
+  <g class="cat" dominant-baseline="middle" style="font-size: 13px">
+    <text x="30" y="190">Filled: a superblock copy. Group 0 holds the primary; mkfs listed the other eight</text>
+    <text x="30" y="212">as block numbers — 32768 is group 1, 98304 is group 3, 1605632 is group 49.</text>
+  </g>
+</svg>
+
+<p class="cap">Groups 0 and 1, then powers of 3, 5, and 7: nine copies, not eighty.</p>
+
+</div>
+
+---
+
+# The Group Descriptor Table
+
+Right after the superblock sits one **descriptor** per group — 64 bytes each on ext4.
+
+| A descriptor records | For its group |
+| --- | --- |
+| Block bitmap location | Which block holds the free-block map |
+| Inode bitmap location | Which block holds the free-inode map |
+| Inode table location | The first block of its inode slice |
+| Free counts, flags | Free blocks, free inodes, whether initialized yet |
+
+The locations are **looked up, not computed**. ext4's `flex_bg` feature packs the bitmaps and
+inode tables of 16 groups together at the front of the first one, so a group's own metadata
+is often not inside the group at all.
+
+Allocation takes the same route: descriptor → bitmap → a free bit → mark it used.
+
+---
+
+# Finding Inode 131074
+
+The kernel has an inode number. The superblock and descriptors stay in memory after mount,
+so only the last step usually touches the disk:
+
+| Step | Source | Result |
+| --- | --- | --- |
+| 1. Which group? | Superblock: 8192 inodes per group | (131074 − 1) ÷ 8192 = group **16**, index **1** |
+| 2. Where is its table? | Descriptor 16 | The inode table's first block |
+| 3. Where in the table? | Superblock: inode size 256 | Index 1 × 256 = byte **256** into the table |
+
+```bash
+sudo debugfs -R "imap <131074>" /dev/sdb1
+# Inode 131074 is part of block group 16
+#         located at block 524320, offset 0x0100
+```
+
+Inodes count from **1**, hence the − 1. From the inode, its extents lead to the data.
+
+---
+
 # The Inode
 
 One fixed-size record — 256 bytes on default ext4 — describing one file.
