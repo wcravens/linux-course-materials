@@ -34,6 +34,8 @@ After working through this material you will be able to:
 - Compare MBR and GPT partition tables and state the limits of each
 - Partition a new disk with `fdisk` or `parted`, and explain why partitioning is destructive
 - Create a filesystem with `mkfs` and explain what `mkfs` writes
+- Explain how the superblock, block groups, and group descriptors let the kernel locate an
+  inode from its number
 - Define an inode, list what it stores, and state the one thing it does not store
 - Read `stat` output field by field
 - Explain a directory as a table of names mapped to inode numbers, and use that model to
@@ -60,6 +62,7 @@ Table: Commands introduced in this lecture, grouped by the layer they operate on
 | `dumpe2fs` | Filesystem | Dump ext filesystem superblock and group metadata |
 | `tune2fs` | Filesystem | Change ext filesystem parameters after creation |
 | `fsck` | Filesystem | Check and repair an unmounted filesystem |
+| `debugfs` | Filesystem | Inspect ext filesystem internals, such as where an inode lives |
 | `stat` | Inode | Show every field of a file's inode |
 | `ls -i` | Inode | Show inode numbers alongside names |
 | `ln` | Inode | Create hard and symbolic links |
@@ -513,13 +516,18 @@ You can read the superblock directly:
 sudo dumpe2fs -h /dev/sdb1
 # Filesystem volume name:   data
 # Filesystem UUID:          3a9f1e2b-7c4d-4a8e-9b1f-2d3c4e5f6a7b
+# Filesystem features:      has_journal extent 64bit flex_bg sparse_super metadata_csum ...
 # Filesystem state:         clean
+# Errors behavior:          Continue
 # Inode count:              655360
 # Block count:              2620923
 # Reserved block count:     131046
 # Free blocks:              2532112
 # Free inodes:              655349
 # Block size:               4096
+# Blocks per group:         32768
+# Inodes per group:         8192
+# Flex block group size:    16
 # Inode size:               256
 # Mount count:              1
 # Last mounted on:          /srv/data
@@ -527,11 +535,12 @@ sudo dumpe2fs -h /dev/sdb1
 ```
 
 `-h` prints the header only; without it you get every block group, which is long and
-occasionally useful. Two numbers in there will come back later: `Inode count` is fixed
-forever, and `Reserved block count` is 131046 blocks — 5% of the filesystem, set aside for
-root. That reservation keeps a full disk from locking out the administrator and gives the
-allocator room to avoid fragmentation. On a pure data volume it is 500 MB of nothing, and
-you can reclaim it:
+occasionally useful. The three per-group lines are the filesystem's geometry, and Part 4
+opens by using them to find a file. Two other numbers come back sooner: `Inode count` is
+fixed forever, and `Reserved block count` is 131046 blocks — 5% of the filesystem, set
+aside for root. That reservation keeps a full disk from locking out the administrator and
+gives the allocator room to avoid fragmentation. On a pure data volume it is 500 MB of
+nothing, and you can reclaim it:
 
 ```bash
 sudo tune2fs -m 1 /dev/sdb1    # reserve 1% instead of 5%
@@ -627,6 +636,152 @@ Normally you never invoke `fsck` by hand at all. The `pass` field in `/etc/fstab
 ---
 
 ## Part 4: Inodes, directories, and metadata
+
+### The superblock comes first
+
+A filesystem keeps metadata at two levels, and this part is mostly about the second one.
+Before it can be reached, though, the first has to be read.
+
+Table: The two levels of filesystem metadata
+
+| Level | Record | Describes |
+| --- | --- | --- |
+| Filesystem | **Superblock** — one, plus backups | The whole filesystem: geometry, counts, identity, state |
+| File | **Inode** — one per file | A single file: type, owner, mode, size, times, blocks |
+
+At mount, the kernel reads the superblock before anything else. It sits at a fixed place,
+1024 bytes into the partition, precisely so that it can be found without knowing anything
+else about the filesystem. What it records is everything else: how big a block is, how many
+inodes each block group holds, and how large each inode is. Without those numbers, not one
+inode can be found.
+
+So there is a chain of lookups. **The superblock is how the kernel finds an inode. The inode
+is how it finds a file's data.**
+
+The `dumpe2fs -h` output from Part 3 is the superblock, and its fields fall into a few
+groups:
+
+Table: The fields of an ext4 superblock, grouped by what they are for
+
+| Category | `dumpe2fs -h` fields | Why it matters |
+| --- | --- | --- |
+| Identity | Volume name, UUID | How `fstab` and `/dev/disk/by-uuid` name it |
+| Geometry | Block size, blocks per group, inodes per group, inode size | Where every other structure sits on disk |
+| Capacity | Block count, inode count, reserved block count | Fixed at `mkfs` — the inode count forever |
+| Free space | Free blocks, free inodes | What `df -h` and `df -i` report |
+| State | Filesystem state, errors behavior, mount count, last checked | Whether `fsck` runs at boot |
+| Features | `has_journal`, `extent`, `dir_index`, and others | What the kernel must support to mount it |
+
+The geometry row is the one the kernel needs to find anything, because the filesystem is
+not one region. It is many.
+
+### Block groups
+
+ext4 cuts the filesystem into **block groups** of equal size. The volume from Part 3 has
+2620923 blocks at 32768 blocks per group, which makes **80 groups**, and each group owns
+its share of the inodes: 655360 ÷ 80 = **8192 inodes per group**.
+
+The group size is not arbitrary. Each group tracks its free blocks in a **block bitmap**
+that is exactly one block long, and one 4096-byte block holds 4096 × 8 = 32768 bits: one
+bit per block in the group. A larger block size would make larger groups.
+
+Each group carries the metadata for its own region:
+
+- A **block bitmap** and an **inode bitmap**, recording which of *this group's* blocks and
+  inodes are free
+- A slice of the **inode table**: 8192 inodes × 256 bytes = 2 MiB, or 512 blocks
+
+The original reason for groups was distance. The allocator tries to put a file's inode in
+the same group as its data, and a directory's files in the same group as each other, so
+that reading related things means short seeks rather than long ones. On an SSD that matters
+less than it did, but the other benefit remains: damage to one group's metadata is
+contained to that group.
+
+### Where the superblock backups live
+
+`mkfs` printed eight block numbers under "Superblock backups stored on blocks." Dividing
+each by 32768 turns it into a group number:
+
+Table: The superblock backups `mkfs` listed, and the block group each one sits in
+
+| Block | Group |
+| --- | --- |
+| 32768 | 1 |
+| 98304 | 3 |
+| 163840 | 5 |
+| 229376 | 7 |
+| 294912 | 9 |
+| 819200 | 25 |
+| 884736 | 27 |
+| 1605632 | 49 |
+
+Group 0 holds the primary, so there are nine copies in 80 groups, not 80. The pattern is
+the `sparse_super` feature: groups 0 and 1, then every power of 3, 5, and 7 (3, 9, 27;
+5, 25; 7, 49). The next candidates, 81 and 125, are past the end of this filesystem. A
+copy in every group would waste space for no gain; a handful, spread across the disk, is
+enough that one bad region cannot take them all.
+
+This is where `fsck -b 32768` from Part 3 gets its number: it is the first backup, in
+group 1.
+
+### The group descriptor table
+
+Right after the superblock sits the **group descriptor table**: one descriptor per group,
+64 bytes each on ext4.
+
+Table: What a group descriptor records about its block group
+
+| A descriptor records | For its group |
+| --- | --- |
+| Block bitmap location | Which block holds the free-block map |
+| Inode bitmap location | Which block holds the free-inode map |
+| Inode table location | The first block of its inode slice |
+| Free counts, flags | Free blocks, free inodes, whether the group is initialized yet |
+
+The locations are **looked up, not computed**. That matters because of the `flex_bg`
+feature in the superblock, with its `Flex block group size: 16`: ext4 packs the bitmaps and
+inode tables of 16 consecutive groups together at the front of the first one. Group 17's
+inode table is not inside group 17 at all; it is in group 16, beside those of groups 16
+through 31. Packing them together keeps metadata reads contiguous and leaves the rest of
+each group as unbroken space for large files. Only the descriptor knows where each piece
+ended up.
+
+Allocation takes the same route. To create a file, ext4 picks a group, reads its descriptor,
+follows it to the inode bitmap, finds a free bit, and marks it used. That bit's position is
+the new file's inode number.
+
+### Finding an inode by number
+
+Put those together and the kernel can go from an inode number to the inode itself. Take
+131074, which is `notes.txt` in the listings below:
+
+Table: The three steps from an inode number to its location on disk
+
+| Step | Source | Result |
+| --- | --- | --- |
+| 1. Which group? | Superblock: 8192 inodes per group | (131074 − 1) ÷ 8192 = group **16**, index **1** |
+| 2. Where is its table? | Descriptor 16 | The inode table's first block |
+| 3. Where in the table? | Superblock: inode size 256 | Index 1 × 256 = byte **256** into the table |
+
+The subtraction is there because inodes count from **1**, not 0; inode 1 is index 0 of
+group 0. The division gives a quotient, the group, and a remainder, the index within it.
+
+`debugfs` will do the same arithmetic and confirm it:
+
+```bash
+sudo debugfs -R "imap <131074>" /dev/sdb1
+# Inode 131074 is part of block group 16
+#         located at block 524320, offset 0x0100
+```
+
+Offset `0x0100` is 256 in hexadecimal, as predicted. The block number shows `flex_bg` at
+work too. Group 16 starts at block 16 × 32768 = 524288, and its flex group has packed 16
+block bitmaps and 16 inode bitmaps there first, 32 blocks, before the inode tables begin at
+524320.
+
+Only the last step usually costs a disk read. The superblock and the descriptors are read
+once at mount and stay in memory, so steps 1 and 2 are arithmetic and a table lookup. From the inode, its block pointers lead to the data, which is where the
+rest of this part begins.
 
 ### The inode
 
@@ -1393,6 +1548,7 @@ Table: Inode and link commands, and the question each one answers
 | `ln -s target b` | Create a file whose contents are a path |
 | `readlink -f FILE` | What does this link chain finally resolve to? |
 | `find . -inum N` | What other names point at this inode? |
+| `sudo debugfs -R "imap <N>" DEV` | Which block group and block hold inode N? |
 | `find . -xdev` | Search without crossing into another filesystem |
 | `df -i` | Are we out of inodes rather than out of space? |
 
@@ -1428,7 +1584,8 @@ Table: Inode and link commands, and the question each one answers
 
 - `man 5 fstab`, `man 8 mount`, `man 8 findmnt`, `man 8 lsblk`, `man 8 blkid`
 - `man 1 stat`, `man 2 stat`, `man 7 inode` — the inode structure, from the source
-- `man 8 mkfs.ext4`, `man 8 tune2fs`, `man 8 dumpe2fs`, `man 8 resize2fs`, `man 8 e2fsck`
+- `man 8 mkfs.ext4`, `man 8 tune2fs`, `man 8 dumpe2fs`, `man 8 resize2fs`, `man 8 e2fsck`,
+  `man 8 debugfs`
 - `man 8 parted`, `man 8 fdisk`, `man 8 sgdisk`
 - [The Linux Documentation Project: Filesystem Hierarchy Standard](https://refspecs.linuxfoundation.org/FHS_3.0/fhs/index.html)
   — what belongs in which directory, and why
