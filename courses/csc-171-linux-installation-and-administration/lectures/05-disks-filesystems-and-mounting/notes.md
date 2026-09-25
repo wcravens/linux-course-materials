@@ -38,6 +38,8 @@ After working through this material you will be able to:
   inode from its number
 - Define an inode, list what it stores, and state the one thing it does not store
 - Read `stat` output field by field
+- Describe how ext2/3 block pointers and ext4 extents map a file to its data blocks, and
+  why extents replaced pointers
 - Explain a directory as a table of names mapped to inode numbers, and use that model to
   predict the behavior of hard links, symbolic links, renames, and deletions
 - Diagnose inode exhaustion and the deleted-but-open-file case where `df` and `du` disagree
@@ -65,6 +67,7 @@ Table: Commands introduced in this lecture, grouped by the layer they operate on
 | `debugfs` | Filesystem | Inspect ext filesystem internals, such as where an inode lives |
 | `stat` | Inode | Show every field of a file's inode |
 | `ls -i` | Inode | Show inode numbers alongside names |
+| `lsattr` | Inode | Show a file's ext attribute flags, including extents |
 | `ln` | Inode | Create hard and symbolic links |
 | `df` | Mount | Report free space, or with `-i` free inodes |
 | `du` | Mount | Report space consumed by files |
@@ -781,8 +784,8 @@ block bitmaps and 16 inode bitmaps there first, 32 blocks, before the inode tabl
 
 Only the last step usually costs a disk read. The superblock and the descriptors are read
 once at mount and stay in memory, so steps 1 and 2 are arithmetic and a table lookup. From
-the inode, its block pointers lead to the data, which is where the rest of this part
-begins.
+the inode, its block pointers or extents lead to the data, a step this part returns to
+once the inode itself is on the table.
 
 ### The inode
 
@@ -801,7 +804,7 @@ Table: What an inode stores
 | Size | Length in bytes |
 | Link count | How many directory entries refer to this inode |
 | Timestamps | Access, modification, and status-change times; on ext4, creation time as well |
-| Block pointers | Where on disk the file's data actually lives |
+| Data location | Where on disk the file's data lives: block pointers on ext2/3, extents on ext4 |
 
 And now the field that is not in that table, and whose absence explains the rest of this
 part:
@@ -876,6 +879,127 @@ itself last changed, which includes a `chmod`, a `chown`, or a rename — operat
 alter the file's metadata while leaving its contents alone. You cannot set `ctime` from
 userspace, and that is the point: it is the field that notices tampering that `touch` can
 otherwise hide.
+
+### From the inode to the data
+
+The last row of the inode table above is the one that actually gets you to a file's
+contents. Every ext inode sets aside the same 60 bytes for it. What goes in those 60 bytes
+is the biggest difference between ext2/3 and ext4, and the two answers are worth seeing in
+order, because the second one exists to fix the first.
+
+Table: How each generation of ext uses the inode's 60 bytes of data location
+
+| Filesystem | The 60 bytes hold | Records |
+| --- | --- | --- |
+| ext2, ext3 | 15 **block pointers** | Every block, one at a time |
+| ext4 | 4 **extents** | Runs of consecutive blocks |
+
+ext3 is ext2 plus a journal. On disk, the way they map a file to its blocks is identical,
+so everything in the next section applies to both.
+
+### ext2 and ext3: a pointer for every block
+
+The 60 bytes are fifteen 4-byte block numbers. The first twelve are **direct** pointers:
+each names one data block. A file of 48 KiB or less (12 blocks × 4 KiB) is fully described
+by the inode alone.
+
+Past that, the remaining three pointers do not point at data. They point at blocks full of
+more pointers. A 4 KiB block holds 1024 four-byte pointers, and the levels multiply:
+
+Table: The fifteen block pointers of an ext2/3 inode, and how much data each can reach
+
+| Pointers | Point to | Adds (4 KiB blocks) |
+| --- | --- | --- |
+| 12 **direct** | Data blocks | 48 KiB |
+| 1 **single indirect** | A block of 1024 pointers to data | 4 MiB |
+| 1 **double indirect** | A block of 1024 pointers to pointer blocks | 4 GiB |
+| 1 **triple indirect** | One more level of the same | 4 TiB |
+
+It is a lopsided tree on purpose. Most files are small, and small files get the cheapest
+possible lookup: read the inode, read the block. Large files pay for their size in
+**pointer blocks**, and each level costs an extra read on the way to the data. (Other
+limits cap an ext3 file at 2 TiB before the triple indirect block is used up.)
+
+The design has a basic inefficiency, and at scale it shows. Most files are written in long
+runs of consecutive blocks, and the block map records every one of them anyway:
+
+- A 1 GiB file needs 262144 pointers, which is about 1 MiB of pointer blocks that must be
+  written, cached, and read back.
+- Reading from deep inside a large file first walks up to three pointer blocks.
+- Deleting a large file means visiting every pointer to free every block. Removing a
+  multi-gigabyte file on ext3 could take seconds, and that was a well-known annoyance.
+- Block numbers are 32 bits, which caps an ext3 filesystem at 16 TiB with 4 KiB blocks.
+
+"Blocks 557056 through 589823" is one fact. The block map writes it down 32768 times.
+
+### ext4: extents
+
+ext4 records that fact once. An **extent** describes a run of consecutive blocks:
+
+Table: The three fields of an ext4 extent
+
+| Field | Size | Meaning |
+| --- | --- | --- |
+| Logical start | 32 bits | The first block **of the file** this run covers |
+| Length | 16 bits | How many blocks, up to 32768: **128 MiB** |
+| Physical start | 48 bits | The first block **on disk** |
+
+An extent is 12 bytes, and the inode's 60 bytes hold a 12-byte header and **four**
+extents. A file in four runs or fewer, up to 512 MiB, is described entirely inside the
+inode, with no pointer blocks at all. The 48-bit physical block number also lifts the
+filesystem ceiling from 16 TiB to 1 EiB.
+
+`debugfs` shows a file's extents. Its paths are relative to the root of the filesystem
+being examined, not to where it is mounted, so `/srv/data/big.img` is `/big.img` here:
+
+```bash
+sudo debugfs -R "stat /big.img" /dev/sdb1
+# ...
+# EXTENTS:
+# (0-32767):557056-589823, (32768-65535):589824-622591, (65536-76799):622592-633855
+```
+
+Each entry reads as file blocks, then disk blocks. This 300 MiB file is 76800 blocks,
+written in three runs: two at the 32768-block maximum and one shorter. That is 36 bytes of
+extent metadata. The same file on ext3 would need 76800 pointers, 300 KiB of them.
+
+When a file needs more than four extents, because it is very large or badly fragmented,
+the extents move out of the inode into an **extent tree**. The inode's slots become index
+entries pointing at tree blocks, and each 4 KiB leaf block holds 340 extents. The tree
+grows a level only when it must, and in practice rarely passes two. Finding block *N* of a
+file becomes a short search through a sorted list of runs rather than a walk down pointer
+blocks.
+
+Because a file is cheapest to describe when it is in a few long runs, ext4 works to keep
+it that way. **Delayed allocation** is the main technique: ext4 does not choose disk
+blocks when a program calls `write`, but later, when the data is flushed to disk, by which
+point it usually knows how big the file has become and can place it in one run.
+
+Two last connections:
+
+- **Compatibility.** A filesystem upgraded from ext3 to ext4 keeps its existing files as
+  block maps, and the ext4 driver reads both kinds. `lsattr` shows which one a file uses;
+  the `e` flag means extents:
+
+  ```bash
+  lsattr /srv/data/big.img
+  # --------------e------- /srv/data/big.img
+  ```
+
+- **Sparse files.** A hole is simply missing from the map: a zero pointer in an ext2/3
+  block map, a gap between extents' logical ranges in ext4. Nothing is allocated for it,
+  which is why `stat` reports so few `Blocks` for such a file.
+
+Table: The ext2/3 block map and ext4 extents, side by side
+
+| Aspect | ext2/3 block map | ext4 extents |
+| --- | --- | --- |
+| Records | One block per pointer | A run of up to 32768 blocks |
+| In the inode | 12 direct + 3 indirect pointers | A header + 4 extents |
+| Outgrows the inode with | Up to 3 levels of pointer blocks | An extent tree |
+| A 1 GiB contiguous file | 262144 pointers, about 1 MiB | 8 extents in one leaf block |
+| Largest filesystem (4 KiB blocks) | 16 TiB | 1 EiB |
+| Largest file (4 KiB blocks) | 2 TiB | 16 TiB |
 
 ### A directory is a table of names
 
@@ -1550,6 +1674,8 @@ Table: Inode and link commands, and the question each one answers
 | `readlink -f FILE` | What does this link chain finally resolve to? |
 | `find . -inum N` | What other names point at this inode? |
 | `sudo debugfs -R "imap <N>" DEV` | Which block group and block hold inode N? |
+| `sudo debugfs -R "stat PATH" DEV` | Which disk blocks hold this file's data? |
+| `lsattr FILE` | Is this file mapped by extents (`e`) or a block map? |
 | `find . -xdev` | Search without crossing into another filesystem |
 | `df -i` | Are we out of inodes rather than out of space? |
 

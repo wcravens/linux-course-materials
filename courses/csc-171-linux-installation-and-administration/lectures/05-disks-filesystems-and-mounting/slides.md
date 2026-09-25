@@ -975,7 +975,7 @@ One fixed-size record — 256 bytes on default ext4 — describing one file.
 | Size | Length in bytes |
 | Link count | How many directory entries refer to this inode |
 | Timestamps | Access, modify, change — and on ext4, birth |
-| Block pointers | Where the data actually lives |
+| Data location | Block pointers or extents: where the data lives |
 
 This is what the filesystem means by "a file."
 
@@ -1113,6 +1113,199 @@ mount | grep sdb1
 
 `noatime` disables it entirely — reasonable on a busy data volume, as long as nothing there
 expects working access times. Classically, mail readers did.
+
+---
+
+# From the Inode to the Data
+
+The inode's last field is 60 bytes set aside for one job: saying where the file's data is.
+
+What goes in those 60 bytes is the biggest difference between ext2/3 and ext4.
+
+| Filesystem | The 60 bytes hold | Records |
+| --- | --- | --- |
+| ext2, ext3 | 15 **block pointers** | Every block, one at a time |
+| ext4 | 4 **extents** | Runs of consecutive blocks |
+
+<div class="hint">
+
+ext3 is ext2 plus a journal. On disk, the way they map a file is identical.
+
+</div>
+
+---
+
+# ext2/3: A Pointer for Every Block
+
+15 pointers of 4 bytes each. With 4 KiB blocks, one pointer block holds 1024 pointers.
+
+| Pointers | Point to | Adds (4 KiB blocks) |
+| --- | --- | --- |
+| 12 **direct** | Data blocks | 48 KiB |
+| 1 **single indirect** | A block of 1024 pointers to data | 4 MiB |
+| 1 **double indirect** | A block of pointers to pointer blocks | 4 GiB |
+| 1 **triple indirect** | One more level | 4 TiB |
+
+Small files never leave the inode. Every level past that costs an extra block read on the
+way to the data.
+
+---
+
+# The Block Map
+
+<div class="viz">
+<svg viewBox="0 0 860 300" role="img" aria-label="An inode containing twelve direct pointers and three indirect pointers. The direct pointers lead straight to twelve data blocks, 48 KiB. The single indirect pointer leads to one pointer block, which leads to 1024 data blocks, 4 MiB. The double indirect pointer leads to a pointer block, then to 1024 pointer blocks, then to 1024 squared data blocks, 4 GiB. The triple indirect pointer passes through three levels of pointer blocks to 1024 cubed data blocks, 4 TiB.">
+  <defs>
+    <marker id="map-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 Z" style="fill: var(--bar)" />
+    </marker>
+  </defs>
+  <rect x="20" y="20" width="220" height="244" rx="6"
+        style="fill: none; stroke: var(--bar); stroke-width: 2.5" />
+  <g style="fill: none; stroke: var(--baseline); stroke-width: 1.5">
+    <rect x="36" y="56" width="180" height="34" />
+    <rect x="36" y="116" width="180" height="34" />
+    <rect x="36" y="164" width="180" height="34" />
+    <rect x="36" y="212" width="180" height="34" />
+    <rect x="320" y="116" width="150" height="34" rx="4" />
+    <rect x="270" y="164" width="130" height="34" rx="4" />
+    <rect x="450" y="164" width="150" height="34" rx="4" />
+    <rect x="680" y="56" width="160" height="34" rx="4" />
+    <rect x="680" y="116" width="160" height="34" rx="4" />
+    <rect x="680" y="164" width="160" height="34" rx="4" />
+    <rect x="680" y="212" width="160" height="34" rx="4" />
+  </g>
+  <rect x="270" y="212" width="330" height="34" rx="4"
+        style="fill: none; stroke: var(--baseline); stroke-width: 1.5; stroke-dasharray: 5 4" />
+  <path d="M51 56v34M66 56v34M81 56v34M96 56v34M111 56v34M126 56v34M141 56v34M156 56v34M171 56v34M186 56v34M201 56v34"
+        style="stroke: var(--baseline); stroke-width: 1" />
+  <g style="stroke: var(--bar); stroke-width: 1.5; fill: none" marker-end="url(#map-arrow)">
+    <path d="M216 73H676" />
+    <path d="M216 133H316" />
+    <path d="M470 133H676" />
+    <path d="M216 181H266" />
+    <path d="M400 181H446" />
+    <path d="M600 181H676" />
+    <path d="M216 229H266" />
+    <path d="M600 229H676" />
+  </g>
+  <text class="val" x="36" y="42" style="font-size: 15px">Inode</text>
+  <g class="cat" text-anchor="middle" dominant-baseline="middle" style="font-size: 13px">
+    <text x="126" y="105">12 direct</text>
+    <text x="126" y="134">single indirect</text>
+    <text x="126" y="182">double indirect</text>
+    <text x="126" y="230">triple indirect</text>
+    <text x="395" y="134">pointer block</text>
+    <text x="335" y="182">pointer block</text>
+    <text x="525" y="182">1024 pointer blocks</text>
+    <text x="435" y="230">three levels of pointer blocks</text>
+  </g>
+  <g class="val" text-anchor="middle" dominant-baseline="middle" style="font-size: 13px">
+    <text x="760" y="74">12 blocks · 48 KiB</text>
+    <text x="760" y="134">1024 blocks · 4 MiB</text>
+    <text x="760" y="182">1024² blocks · 4 GiB</text>
+    <text x="760" y="230">1024³ blocks · 4 TiB</text>
+  </g>
+</svg>
+
+<p class="cap">Every data block has its own pointer. Past 48 KiB, the pointers themselves need blocks.</p>
+
+</div>
+
+---
+
+# Where the Block Map Breaks Down
+
+Most files are laid out in long runs of consecutive blocks, and the map records every one
+of them anyway.
+
+- A 1 GiB file needs **262144 pointers**: about 1 MiB of pointer blocks
+- Reading deep into a large file first walks **up to three** pointer blocks
+- Deleting a large file means visiting every pointer to free every block, which made
+  deleting big files on ext3 notoriously slow
+- 32-bit block numbers cap the filesystem at **16 TiB** with 4 KiB blocks
+
+<div class="hint">
+
+"Blocks 557056 through 589823" is one fact. The block map writes it down 32768 times.
+
+</div>
+
+---
+
+# ext4: Extents
+
+An **extent** records a run: "these blocks of the file are *here*, this many in a row."
+
+| Field | Size | Meaning |
+| --- | --- | --- |
+| Logical start | 32 bits | First block **of the file** this run covers |
+| Length | 16 bits | Up to 32768 blocks: **128 MiB** |
+| Physical start | 48 bits | First block **on disk** |
+
+The same 60 bytes in the inode hold a small header and **four** extents: up to 512 MiB of
+file, described without a single extra block.
+
+48-bit block numbers also raise the filesystem ceiling from 16 TiB to **1 EiB**.
+
+---
+
+# Reading a File's Extents
+
+A 300 MiB file: 76800 blocks. `debugfs` paths start at the filesystem's own root.
+
+```bash
+sudo debugfs -R "stat /big.img" /dev/sdb1
+# ...
+# EXTENTS:
+# (0-32767):557056-589823, (32768-65535):589824-622591, (65536-76799):622592-633855
+```
+
+Three extents: 36 bytes of metadata. The block map would need 76800 pointers, 300 KiB.
+
+```bash
+lsattr /srv/data/big.img
+# --------------e------- /srv/data/big.img
+```
+
+The `e` flag marks a file mapped by extents. A filesystem upgraded from ext3 keeps its old
+files as block maps; the ext4 driver reads both.
+
+---
+
+# When Four Extents Are Not Enough
+
+A fragmented or very large file grows an **extent tree**:
+
+- The inode's four slots point to **index** blocks instead of data
+- Each 4 KiB **leaf** block holds 340 extents
+- Depth grows only as needed, and rarely passes two
+
+Finding block *N* of a file becomes a short search of a sorted list, not a walk through
+pointer blocks.
+
+<div class="hint">
+
+Fewer, longer extents are the goal. **Delayed allocation** picks disk blocks at writeback,
+once the file's size is known, so ext4 can place it in one run.
+
+</div>
+
+---
+
+# Review: Block Map vs. Extents
+
+| Aspect | ext2/3 block map | ext4 extents |
+| --- | --- | --- |
+| Records | One block per pointer | A run of up to 32768 blocks |
+| In the inode | 12 direct + 3 indirect pointers | A header + 4 extents |
+| Outgrows the inode with | Up to 3 levels of pointer blocks | An extent tree |
+| A 1 GiB contiguous file | 262144 pointers, ~1 MiB | 8 extents, one leaf block |
+| Largest filesystem (4 KiB blocks) | 16 TiB | 1 EiB |
+| Largest file (4 KiB blocks) | 2 TiB | 16 TiB |
+
+A sparse file's holes are simply missing: a zero pointer in a block map, a gap between
+extents in ext4.
 
 ---
 
