@@ -780,8 +780,9 @@ block bitmaps and 16 inode bitmaps there first, 32 blocks, before the inode tabl
 524320.
 
 Only the last step usually costs a disk read. The superblock and the descriptors are read
-once at mount and stay in memory, so steps 1 and 2 are arithmetic and a table lookup. From the inode, its block pointers lead to the data, which is where the
-rest of this part begins.
+once at mount and stay in memory, so steps 1 and 2 are arithmetic and a table lookup. From
+the inode, its block pointers lead to the data, which is where the rest of this part
+begins.
 
 ### The inode
 
